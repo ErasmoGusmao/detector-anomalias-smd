@@ -1,0 +1,31 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# --- Ambientes virtuais ---
+.venv/
+venv/
+env/
+
+# --- Dados e artefatos (não subir datasets nem modelos treinados) ---
+data/*
+!data/.gitkeep
+*.csv
+*.parquet
+*.pt
+*.pth
+*.pkl
+models_saved/
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+
+# --- IDEs / SO ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

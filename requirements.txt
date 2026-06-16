@@ -1,0 +1,4 @@
+# Dependências da Entrega 1 (manter simples).
+# PyTorch entra na Entrega 2; matplotlib mais adiante.
+numpy
+pandas
