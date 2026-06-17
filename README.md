@@ -2,7 +2,6 @@
 
 Projeto Integrador da disciplina **Engenharia de Software para IA e Frameworks Profundos** (pós-graduação, CIn) — **Grupo 12**.
 
-> ⚠️ **Nome provisório** (`detector-anomalias-smd`), sujeito a confirmação pela equipe.
 > Tema proposto por Leonardo Magalhães e Breno Santos.
 
 ## Problema
@@ -70,10 +69,48 @@ prometer diagnósticos operacionais específicos, como identificar exatamente qu
 real do servidor falhou.
 
 > 📌 **Nota:** a escolha do **dataset SMD** e o recorte do problema foram **ratificados
-> pelo grupo** na reunião de alinhamento da Entrega 1; o **nome** do projeto segue como
-> denominação de trabalho, podendo ser ajustado. Esta versão entrega a **estrutura
+> pelo grupo** na reunião de alinhamento da Entrega 1. Esta versão entrega a **estrutura
 > organizada e tipada** do projeto; as funções estão com assinatura e contrato definidos,
 > e a implementação será preenchida na sequência.
+
+## Como obter a base de dados
+
+Os arquivos do SMD **não são versionados** neste repositório — datasets ficam fora do Git
+por boa prática (a pasta `data/` é ignorada pelo `.gitignore`, exceto o `.gitkeep`). Cada
+integrante precisa baixar a base e colocá-la em `data/` localmente. Há duas formas:
+
+**Opção A — Kaggle**
+
+```bash
+# requer a Kaggle CLI autenticada (pip install kaggle + token de API)
+kaggle datasets download -d mgusat/smd-onmiad -p data/ --unzip
+```
+
+Alternativamente, baixe pelo navegador em
+[SMD_OnmiAD](https://www.kaggle.com/datasets/mgusat/smd-onmiad) e extraia o conteúdo em `data/`.
+
+**Opção B — repositório original (OmniAnomaly)**
+
+```bash
+git clone https://github.com/NetManAIOps/OmniAnomaly.git
+# copie a pasta ServerMachineDataset/ para data/
+```
+
+Organização típica dos arquivos após o download — um `.txt` por máquina, nomeado no
+formato `machine-<grupo>-<indice>`:
+
+```
+data/
+└── ServerMachineDataset/
+    ├── train/                 # séries de treino
+    ├── test/                  # séries de teste
+    ├── test_label/            # rótulos normal/anômalo do conjunto de teste
+    └── interpretation_label/  # dimensões associadas às anomalias
+```
+
+> Confira a estrutura após extrair (ela pode variar conforme a fonte) e ajuste o caminho
+> de leitura usado pelo pipeline. Os arquivos baixados ficam **fora do controle de versão**
+> (cobertos pelo `.gitignore`), mantendo o repositório leve e reprodutível.
 
 ## Estrutura do projeto (Entrega 1)
 
@@ -123,7 +160,7 @@ python main.py
 |---------|----------|--------|
 | 1 | Descrição/contextualização do problema | ✅ Concluído |
 | 1 | Documentação da base de dados SMD | ✅ Concluído |
-| 1 | Funções iniciais | 🟡 Em andamento |
+| 1 | Funções iniciais | ✅ Concluído |
 | 1 | Modularização e organização do código | ✅ Concluído |
 | 1 | Tipagem (type hints) | ✅ Concluído |
 | 2 | Implementação em PyTorch (parte 1) + NumPy | ⬜ Pendente |
@@ -133,9 +170,8 @@ python main.py
 | 6 | Design/arquitetura + Git e colaboração | ⬜ Pendente |
 | Final | Apresentação | ⬜ Pendente |
 
-> Pendências da Entrega 1: **confirmar o nome** (hoje provisório), definir o **recorte
-> inicial do SMD** que será usado no primeiro experimento e implementar as **funções
-> iniciais**.
+> Pendências da Entrega 1: definir o **recorte inicial do SMD** que será usado no
+> primeiro experimento e implementar as **funções iniciais**.
 
 ## Equipe
 
