@@ -69,10 +69,11 @@ consegue estudar o comportamento numérico das séries e detectar anomalias, mas
 prometer diagnósticos operacionais específicos, como identificar exatamente qual componente
 real do servidor falhou.
 
-> 📌 **Provisório:** tanto o **nome** do projeto quanto a escolha do **dataset SMD** e o
-> recorte do problema são uma proposta do grupo, **a ratificar na reunião de alinhamento**.
-> Esta versão entrega a **estrutura organizada e tipada** do projeto; as funções estão com
-> assinatura e contrato definidos, e a implementação será preenchida na sequência.
+> 📌 **Nota:** a escolha do **dataset SMD** e o recorte do problema foram **ratificados
+> pelo grupo** na reunião de alinhamento da Entrega 1; o **nome** do projeto segue como
+> denominação de trabalho, podendo ser ajustado. Esta versão entrega a **estrutura
+> organizada e tipada** do projeto; as funções estão com assinatura e contrato definidos,
+> e a implementação será preenchida na sequência.
 
 ## Estrutura do projeto (Entrega 1)
 
@@ -134,7 +135,7 @@ python main.py
 
 > Pendências da Entrega 1: **confirmar o nome** (hoje provisório), definir o **recorte
 > inicial do SMD** que será usado no primeiro experimento e implementar as **funções
-> iniciais**. Repositório no GitHub em criação.
+> iniciais**.
 
 ## Equipe
 
