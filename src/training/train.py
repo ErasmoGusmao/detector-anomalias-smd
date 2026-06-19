@@ -6,15 +6,24 @@ e o ciclo de treino.
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 
 
 def train_model(
-    model,
+    model: Any,
     X_train: np.ndarray,
     y_train: Optional[np.ndarray] = None,
 ) -> object:
-    """Executa o treinamento do modelo informado."""
+    """Executa o treinamento do modelo informado.
+    
+    Args:
+        model: Instancia de um modelo.
+        X_train: Matriz de treino.
+        y_train: Rotulos de treino.
+
+    Returns:
+        Modelo treinado.
+    """
     pass
