@@ -5,12 +5,16 @@ preenchida nas proximas entregas do projeto.
 """
 
 from __future__ import annotations
-
+from typing import Any
 import numpy as np
 
 
-def create_model():
-    """Cria e configura o modelo de deteccao de anomalias."""
+def create_model() -> Any:
+    """Cria e configura o modelo de deteccao de anomalias.
+    
+    Returns:
+        Instancia do modelo configurado.
+    """
     pass
 
 
