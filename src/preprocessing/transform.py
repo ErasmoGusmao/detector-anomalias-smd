@@ -19,7 +19,12 @@ def standardize(X: np.ndarray) -> np.ndarray:
     Returns:
         Matriz padronizada.
     """
-    pass
+    X_float = np.asarray(X, dtype=float)
+    mean = np.mean(X_float, axis=0)
+    std = np.std(X_float, axis=0)
+    safe_std = np.where(std == 0, 1.0, std)
+
+    return (X_float - mean) / safe_std
 
 
 def split_features_target(
@@ -34,7 +39,13 @@ def split_features_target(
     Returns:
         Tupla (X, y).
     """
-    pass
+    if target_column not in data.columns:
+        raise ValueError(f"Coluna alvo nao encontrada: {target_column}")
+
+    X = data.drop(columns=[target_column]).to_numpy()
+    y = data[target_column].to_numpy()
+
+    return X, y
 
 
 def split_data(
@@ -52,4 +63,19 @@ def split_data(
     Returns:
         Tupla (X_train, X_test, y_train, y_test).
     """
-    pass
+    if not 0 < test_size < 1:
+        raise ValueError("test_size deve estar entre 0 e 1.")
+
+    if len(X) != len(y):
+        raise ValueError("X e y devem ter a mesma quantidade de amostras.")
+
+    split_index = int(len(X) * (1 - test_size))
+    if split_index == 0 or split_index == len(X):
+        raise ValueError("A divisao deve produzir conjuntos de treino e teste.")
+
+    X_train = X[:split_index]
+    X_test = X[split_index:]
+    y_train = y[:split_index]
+    y_test = y[split_index:]
+
+    return X_train, X_test, y_train, y_test
