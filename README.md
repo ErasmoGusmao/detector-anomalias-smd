@@ -178,15 +178,18 @@ python main.py
 | 1 | Funções iniciais | ✅ Concluído |
 | 1 | Modularização e organização do código | ✅ Concluído |
 | 1 | Tipagem (type hints) | ✅ Concluído |
-| 2 | Implementação em PyTorch (parte 1) + NumPy | ⬜ Pendente |
-| 3 | Implementação em PyTorch (parte 2) | ⬜ Pendente |
+| 2 | Uso adequado de NumPy | 🔄 Em andamento |
+| 3 | Implementação em PyTorch (partes 1 e 2) | ⬜ Pendente |
 | 4 | Testes automatizados (unittest) | ⬜ Pendente |
 | 5 | Requisitos | ⬜ Pendente |
 | 6 | Design/arquitetura + Git e colaboração | ⬜ Pendente |
 | Final | Apresentação | ⬜ Pendente |
 
-> Pendências da Entrega 1: definir o **recorte inicial do SMD** que será usado no
-> primeiro experimento e implementar as **funções iniciais**.
+> Entrega 2 (em andamento): o pré-processamento com **NumPy** em
+> `src/preprocessing/transform.py` (padronização, separação atributos/alvo e divisão
+> treino/teste) já está implementado. Faltam o carregamento e a limpeza dos dados
+> (`load_data`/`clean_data`) e a orquestração do `main.py`, além de definir o **recorte
+> inicial do SMD** (começar por uma única máquina) para o primeiro experimento.
 
 ## Equipe
 
