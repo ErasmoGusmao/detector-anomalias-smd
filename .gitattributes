@@ -1,0 +1,4 @@
+# Dados do SMD versionados: preservar os bytes exatamente como foram baixados,
+# sem conversão de fim-de-linha (LF/CRLF) por plataforma. Garante que todo o
+# grupo, em qualquer sistema operacional, trabalhe sobre dados idênticos.
+data/ServerMachineDataset/** -text
