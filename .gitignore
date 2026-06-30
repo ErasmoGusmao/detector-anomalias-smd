@@ -14,6 +14,24 @@ env/
 # --- Dados e artefatos (não subir datasets nem modelos treinados) ---
 data/*
 !data/.gitkeep
+
+# Exceção controlada: versionar APENAS a machine-1-1 do SMD, para que todo o
+# grupo trabalhe sobre exatamente os mesmos dados (reprodutibilidade). As demais
+# máquinas do dataset, se forem baixadas, permanecem fora do versionamento.
+!data/ServerMachineDataset/
+data/ServerMachineDataset/*
+!data/ServerMachineDataset/train/
+!data/ServerMachineDataset/test/
+!data/ServerMachineDataset/test_label/
+!data/ServerMachineDataset/interpretation_label/
+data/ServerMachineDataset/train/*
+data/ServerMachineDataset/test/*
+data/ServerMachineDataset/test_label/*
+data/ServerMachineDataset/interpretation_label/*
+!data/ServerMachineDataset/train/machine-1-1.txt
+!data/ServerMachineDataset/test/machine-1-1.txt
+!data/ServerMachineDataset/test_label/machine-1-1.txt
+!data/ServerMachineDataset/interpretation_label/machine-1-1.txt
 *.csv
 *.parquet
 *.pt
