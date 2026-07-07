@@ -1,7 +1,8 @@
-"""Carregamento e limpeza dos dados (Entrega 1).
+"""Carregamento e limpeza dos dados.
 
-Assinaturas e contratos das funções iniciais do sistema. A **implementação**
-será feita na tarefa de funções do código (#5).
+Funções iniciais do sistema, responsáveis por ler os arquivos do Server
+Machine Dataset (SMD) e entregar um DataFrame pronto para o pré-processamento
+em NumPy.
 """
 
 from __future__ import annotations
@@ -11,24 +12,37 @@ import pandas as pd
 
 
 def load_data(path: Union[str, Path]) -> pd.DataFrame:
-    """Carrega a base de dados a partir de um arquivo CSV.
-    
+    """Carrega a base de dados a partir de um arquivo de métricas do SMD.
+
+    Os arquivos do Server Machine Dataset são texto com valores separados por
+    vírgula, **sem cabeçalho** e já normalizados no intervalo [0, 1]. Cada
+    coluna representa uma métrica operacional do servidor.
+
     Args:
-        path: Caminho para o arquivo csv.
+        path: Caminho para o arquivo de métricas (ex.: ``train/machine-1-1.txt``).
 
     Returns:
-        Dataframe com os dados brutos.
+        Dataframe com os dados brutos, uma coluna por métrica.
+
+    Raises:
+        FileNotFoundError: se o arquivo não existir no caminho informado.
     """
-    pass
+    file_path = Path(path)
+    if not file_path.is_file():
+        raise FileNotFoundError(f"Arquivo de dados nao encontrado: {file_path}")
+
+    return pd.read_csv(file_path, header=None)
 
 
 def clean_data(data: pd.DataFrame) -> pd.DataFrame:
     """Remove duplicatas e linhas com valores ausentes.
-    
+
     Args:
         data: Dataframe com dados brutos.
 
     Returns:
-        Dataframe limpo, sem duplicatas nem valores nulos.
+        Dataframe limpo, sem duplicatas nem valores nulos, com o índice
+        reindexado de forma contígua.
     """
-    pass
+    cleaned = data.drop_duplicates().dropna()
+    return cleaned.reset_index(drop=True)
