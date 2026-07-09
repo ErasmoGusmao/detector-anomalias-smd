@@ -41,8 +41,8 @@ def clean_data(data: pd.DataFrame) -> pd.DataFrame:
         data: Dataframe com dados brutos.
 
     Returns:
-        Dataframe limpo, sem duplicatas nem valores nulos, com o índice
+        Dataframe limpo, sem valores nulos, com o índice
         reindexado de forma contígua.
     """
-    cleaned = data.drop_duplicates().dropna()
+    cleaned = data.dropna()
     return cleaned.reset_index(drop=True)
