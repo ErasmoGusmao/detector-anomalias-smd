@@ -10,21 +10,34 @@ import numpy as np
 import pandas as pd
 
 
-def standardize(X: np.ndarray) -> np.ndarray:
+def standardize(
+    X: np.ndarray,
+    mean: np.ndarray | None = None,
+    std: np.ndarray | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Padroniza os atributos para média 0 e desvio-padrão 1 (z-score).
-    
+
+    Se *mean* e *std* não forem fornecidos, são calculados a partir de *X*
+    (modo fit+transform). Caso contrário, os parâmetros fornecidos são
+    aplicados diretamente (modo transform).
+
     Args:
         X: Matriz de atributos.
+        mean: Média por feature (opcional). Se None, calculada a partir de X.
+        std: Desvio-padrão por feature (opcional). Se None, calculado a partir de X.
 
     Returns:
-        Matriz padronizada.
+        Tupla (X_padronizado, mean, std).
     """
     X_float = np.asarray(X, dtype=float)
-    mean = np.mean(X_float, axis=0)
-    std = np.std(X_float, axis=0)
+
+    if mean is None or std is None:
+        mean = np.mean(X_float, axis=0)
+        std = np.std(X_float, axis=0)
+
     safe_std = np.where(std == 0, 1.0, std)
 
-    return (X_float - mean) / safe_std
+    return (X_float - mean) / safe_std, mean, std
 
 
 def split_features_target(
