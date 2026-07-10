@@ -93,8 +93,8 @@ def split_data(
         raise ValueError("A divisao deve produzir dois conjuntos nao vazios.")
 
     X_first = X[:split_index]
-    X_test = X[split_index:]
+    X_second = X[split_index:]
     y_first = y[:split_index]
     y_second = y[split_index:]
 
-    return X_first, X_test, y_train, y_test
+    return X_first, X_second, y_first, y_second
