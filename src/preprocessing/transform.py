@@ -66,15 +66,21 @@ def split_data(
     y: np.ndarray,
     test_size: float = 0.2,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Reserva o trecho final da serie para teste, em ordem temporal.
+    """Divide os dados em dois conjuntos consecutivos, preservando a ordem temporal.
+       O trecho inicial fica no primeiro conjunto e o trecho final no segundo.
+       Util para criar splits treino/validacao em series temporais,
     
     Args:
         X: Matriz de atributos.
-        y: Array de rotulos.
-        test_size: Fracao dos dados para teste.
+        y: Array auxiliar com o mesmo comprimento de X (ex: indices temporais).
+        test_size: Fracao dos dados reservada para o segundo conjunto.
 
     Returns:
-        Tupla (X_train, X_test, y_train, y_test).
+        Tupla (X_first, X_second, y_first, y_second):
+            - X_first: trecho inicial da matriz de atributos.
+            - X_second: trecho final da matriz de atributos.
+            - y_first: trecho inicial do array auxiliar.
+            - y_second: trecho final do array auxiliar.
     """
     if not 0 < test_size < 1:
         raise ValueError("test_size deve estar entre 0 e 1.")
@@ -84,11 +90,11 @@ def split_data(
 
     split_index = int(len(X) * (1 - test_size))
     if split_index == 0 or split_index == len(X):
-        raise ValueError("A divisao deve produzir conjuntos de treino e teste.")
+        raise ValueError("A divisao deve produzir dois conjuntos nao vazios.")
 
-    X_train = X[:split_index]
+    X_first = X[:split_index]
     X_test = X[split_index:]
-    y_train = y[:split_index]
-    y_test = y[split_index:]
+    y_first = y[:split_index]
+    y_second = y[split_index:]
 
-    return X_train, X_test, y_train, y_test
+    return X_first, X_test, y_train, y_test
