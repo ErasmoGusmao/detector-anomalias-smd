@@ -13,16 +13,17 @@ def _prepare_binary_arrays(
     y_pred_arr = np.asarray(y_pred)
 
     if y_true_arr.shape != y_pred_arr.shape:
-        raise ValueError("y_true e y_pred devem ter o mesmo formato")
+        raise ValueError('y_true e y_pred devem ter o mesmo formato')
 
     if y_true_arr.ndim != 1 or y_pred_arr.ndim != 1:
-        raise ValueError("y_true e y_pred devem ser arrays unidimensionais")
+        raise ValueError('y_true e y_pred devem ser arrays unidimensionais')
 
     if y_true_arr.size == 0:
-        raise ValueError("y_true e y_pred não podem ser vazios")
+        raise ValueError('y_true e y_pred não podem ser vazios')
 
-    # Conversão para bool para usar & e ~ nas contagens de TP/FP/FN/TN.
-    # Em bool, & e ~ funcionam como esperado (E lógico e negação).
+    # Conversão para bool para usar & e ~ nas contagens de
+    # TP/FP/FN/TN. Em bool, & e ~ funcionam como esperado
+    # (E lógico e negação).
     return y_true_arr != 0, y_pred_arr != 0
 
 
@@ -45,8 +46,10 @@ def precision_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     nenhuma predição positiva.
 
     Args:
-        y_true: Array binário de rótulos do SMD (0/1), onde 1 indica anomalia.
-        y_pred: Array binário de predições do modelo (0/1), onde 1 indica anomalia.
+        y_true: Array binário de rótulos do SMD (0/1), onde 1 indica
+            anomalia.
+        y_pred: Array binário de predições do modelo (0/1), onde 1 indica
+            anomalia.
 
     Returns:
         Valor da precisão entre 0.0 e 1.0.
@@ -65,8 +68,10 @@ def recall_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     nenhuma anomalia real.
 
     Args:
-        y_true: Array binário de rótulos do SMD (0/1), onde 1 indica anomalia.
-        y_pred: Array binário de predições do modelo (0/1), onde 1 indica anomalia.
+        y_true: Array binário de rótulos do SMD (0/1), onde 1 indica
+            anomalia.
+        y_pred: Array binário de predições do modelo (0/1), onde 1 indica
+            anomalia.
 
     Returns:
         Valor do recall entre 0.0 e 1.0.
@@ -84,8 +89,10 @@ def f1_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     Fórmula: F1 = 2 * precision * recall / (precision + recall).
 
     Args:
-        y_true: Array binário de rótulos do SMD (0/1), onde 1 indica anomalia.
-        y_pred: Array binário de predições do modelo (0/1), onde 1 indica anomalia.
+        y_true: Array binário de rótulos do SMD (0/1), onde 1 indica
+            anomalia.
+        y_pred: Array binário de predições do modelo (0/1), onde 1 indica
+            anomalia.
 
     Returns:
         Valor do F1-score entre 0.0 e 1.0.
@@ -106,8 +113,10 @@ def accuracy_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     Fórmula: accuracy = (TP + TN) / (TP + TN + FP + FN).
 
     Args:
-        y_true: Array binário de rótulos do SMD (0/1), onde 1 indica anomalia.
-        y_pred: Array binário de predições do modelo (0/1), onde 1 indica anomalia.
+        y_true: Array binário de rótulos do SMD (0/1), onde 1 indica
+            anomalia.
+        y_pred: Array binário de predições do modelo (0/1), onde 1 indica
+            anomalia.
 
     Returns:
         Valor da acurácia entre 0.0 e 1.0.
@@ -117,16 +126,25 @@ def accuracy_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return (tp + tn) / total
 
 
-def calculate_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float]:
+def calculate_metrics(
+    y_true: np.ndarray, y_pred: np.ndarray
+) -> dict[str, float]:
     """Calcula métricas de avaliação para as predições do modelo.
 
     Args:
-        y_true: Array binário de rótulos do SMD (0/1), onde 1 indica anomalia.
-        y_pred: Array binário de predições do modelo (0/1), onde 1 indica anomalia.
+        y_true: Array binário de rótulos do SMD (0/1), onde 1 indica
+            anomalia.
+        y_pred: Array binário de predições do modelo (0/1), onde 1 indica
+            anomalia.
 
     Returns:
-        Dicionário com chaves e valores de métricas (precision, recall,
-        f1_score, accuracy).
+        Dicionário com chaves e valores de métricas.
+
+        Chaves presentes:
+            - precision
+            - recall
+            - f1_score
+            - accuracy
     """
     tp, fp, fn, tn = _confusion_matrix_counts(y_true, y_pred)
     predicted_positives = tp + fp
@@ -139,8 +157,8 @@ def calculate_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float
     acc = (tp + tn) / total
 
     return {
-        "precision": prec,
-        "recall": rec,
-        "f1_score": f1,
-        "accuracy": acc,
+        'precision': prec,
+        'recall': rec,
+        'f1_score': f1,
+        'accuracy': acc,
     }
