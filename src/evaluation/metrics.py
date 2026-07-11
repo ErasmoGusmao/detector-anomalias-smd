@@ -13,13 +13,13 @@ def _prepare_binary_arrays(
     y_pred_arr = np.asarray(y_pred)
 
     if y_true_arr.shape != y_pred_arr.shape:
-        raise ValueError('y_true e y_pred devem ter o mesmo formato')
+        raise ValueError("y_true e y_pred devem ter o mesmo formato")
 
     if y_true_arr.ndim != 1 or y_pred_arr.ndim != 1:
-        raise ValueError('y_true e y_pred devem ser arrays unidimensionais')
+        raise ValueError("y_true e y_pred devem ser arrays unidimensionais")
 
     if y_true_arr.size == 0:
-        raise ValueError('y_true e y_pred não podem ser vazios')
+        raise ValueError("y_true e y_pred não podem ser vazios")
 
     # Conversão para bool para usar & e ~ nas contagens de
     # TP/FP/FN/TN. Em bool, & e ~ funcionam como esperado
@@ -157,8 +157,8 @@ def calculate_metrics(
     acc = (tp + tn) / total
 
     return {
-        'precision': prec,
-        'recall': rec,
-        'f1_score': f1,
-        'accuracy': acc,
+        "precision": prec,
+        "recall": rec,
+        "f1_score": f1,
+        "accuracy": acc,
     }
