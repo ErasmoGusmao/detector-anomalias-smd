@@ -121,8 +121,8 @@ def calculate_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float
     """Calcula métricas de avaliação para as predições do modelo.
 
     Args:
-        y_true: Array binário de rótulos.
-        y_pred: Array binário de predições.
+        y_true: Array binário de rótulos do SMD (0/1), onde 1 indica anomalia.
+        y_pred: Array binário de predições do modelo (0/1), onde 1 indica anomalia.
 
     Returns:
         Dicionário com chaves e valores de métricas (precision, recall,
