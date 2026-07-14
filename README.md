@@ -200,6 +200,10 @@ corretamente localizadas).
 > **1 a 38** (1-indexed); na matriz NumPy (0-indexed), a "dimensão 1" é a **coluna 0** —
 > atenção ao *off-by-one* ao cruzá-las com os dados.
 
+### 6. Métricas de avaliação: por que acurácia não é a métrica mais adequada
+
+O conjunto de dados SMD é desbalanceado, pois o número de instantes normais é significativamente maior do que o de instantes anômalos. Nesse contexto, a **acurácia (accuracy)** não é a métrica mais adequada para avaliar o desempenho do modelo, uma vez que um classificador trivial (*dummy*), que sempre indica a classe normal, ainda obteria uma acurácia elevada. Por esse motivo, este projeto utiliza como principais métricas de avaliação a **precisão (*precision*)**, a **sensibilidade (*recall*)** e a **medida F1 (*F1-score*)**, deixando a **acurácia** apenas como uma métrica complementar.
+
 ## Como obter a base de dados
 
 Os arquivos do SMD **não são versionados** neste repositório — datasets ficam fora do Git
