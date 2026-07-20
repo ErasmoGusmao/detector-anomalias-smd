@@ -59,6 +59,45 @@ def main() -> None:
     print(f"  -> rótulos de teste: {y_test.shape}, anômalos: {int(y_test.sum())}")
     print()
 
+    # =======================================================================
+    # == Treino e avaliação (Entrega 3 — PyTorch) ==
+    # =======================================================================
+    # ESQUELETO: a costura abaixo consome X_train, X_val, X_test e y_test já
+    # produzidos acima. Está comentada porque os módulos de modelo/treino
+    # ainda são stubs; a equipe descomenta conforme cada PR fica pronto.
+    #
+    # Imports necessários (mover para o topo ao ativar):
+    #   from src.models.model import create_model, reconstruction_error
+    #   from src.models.persistence import save_model
+    #   from src.training.train import build_dataloader, evaluate_loss, train_model
+    #   from src.evaluation.metrics import (
+    #       calculate_metrics, predict_anomalies, reconstruction_threshold,
+    #   )
+    #   from src.utils.torch_utils import get_device, set_seed
+    #   import torch.nn as nn
+    #
+    # set_seed()
+    # device = get_device(prefer_cuda=False)
+    #
+    # # Modelo e treino (imprime erro de treino e validação por época).
+    # model = create_model(input_dim=X_train.shape[1], device=device)
+    # history = train_model(model, X_train, X_val, device=device)
+    #
+    # # Erro de teste (requisito: imprimir o erro de teste).
+    # test_loader = build_dataloader(X_test, shuffle=False, device=device)
+    # test_loss = evaluate_loss(model, test_loader, nn.MSELoss(), device=device)
+    # print(f"Erro de reconstrução no teste: {test_loss:.6f}")
+    #
+    # # Persistência (requisito: salvar o modelo).
+    # save_model(model)
+    #
+    # # Avaliação de anomalias (fecha o ciclo com as métricas da Entrega 4).
+    # err_train = reconstruction_error(model, X_train, device=device)
+    # threshold = reconstruction_threshold(err_train, config.ANOMALY_PERCENTILE)
+    # err_test = reconstruction_error(model, X_test, device=device)
+    # y_pred = predict_anomalies(err_test, threshold)
+    # print(calculate_metrics(y_test, y_pred))
+
 
 if __name__ == "__main__":
     main()
