@@ -142,8 +142,8 @@ def reconstruction_error(
     """Calcula o erro de reconstrução (MSE) por janela.
 
     Executa o modelo em modo de avaliação (sem gradiente) sobre as janelas
-    deslizantes extraídas de ``X`` e devolve o erro médio de reconstrução de
-    cada janela.
+    deslizantes extraídas de ``X`` e devolve o erro médio de reconstrução das
+    features no último timestep de cada janela.
 
     Args:
         model: Autoencoder treinado.
@@ -152,8 +152,8 @@ def reconstruction_error(
         device: Device de execução.
 
     Returns:
-        Array 1-D com o erro de reconstrução por janela, shape
-        ``(n_amostras - window_size + 1,)``.
+        Array 1-D com o erro de reconstrução do último timestep de cada janela,
+        shape ``(n_amostras - window_size + 1,)``.
 
     Nota:
         Cada erro é associado ao último timestep de sua janela. Portanto, os
@@ -201,7 +201,10 @@ def reconstruction_error(
             )
             batch = torch.from_numpy(windows).to(target_device)
             reconstructed = model(batch)
-            errors = torch.mean((reconstructed - batch) ** 2, dim=(1, 2))
+            errors = torch.mean(
+                (reconstructed[:, -1, :] - batch[:, -1, :]) ** 2,
+                dim=1,
+            )
             error_batches.append(errors.cpu().numpy())
 
     return np.concatenate(error_batches)
