@@ -2,11 +2,14 @@
 
 Concentra ganchos transversais ao pipeline de treino — fixar sementes (para
 reprodutibilidade, RNF a ser cobrado na Entrega 5) e escolher o device.
-
-ESQUELETO (Entrega 3): a implementação do corpo é tarefa da equipe.
 """
 
 from __future__ import annotations
+
+import random
+
+import numpy as np
+import torch
 
 from src.utils import config
 
@@ -21,9 +24,7 @@ def get_device(prefer_cuda: bool = False) -> str:
     Returns:
         "cuda" se solicitado e disponível, senão "cpu".
     """
-    # TODO(equipe): retornar "cuda" se prefer_cuda and torch.cuda.is_available()
-    # else "cpu".
-    raise NotImplementedError("TODO(equipe): resolver o device de execução")
+    return "cuda" if prefer_cuda and torch.cuda.is_available() else "cpu"
 
 
 def set_seed(seed: int = config.RANDOM_SEED) -> None:
@@ -34,6 +35,9 @@ def set_seed(seed: int = config.RANDOM_SEED) -> None:
     Args:
         seed: Semente a aplicar.
     """
-    # TODO(equipe): random.seed(seed); np.random.seed(seed);
-    # torch.manual_seed(seed); torch.cuda.manual_seed_all(seed).
-    raise NotImplementedError("TODO(equipe): fixar as sementes de aleatoriedade")
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
