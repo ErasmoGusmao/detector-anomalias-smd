@@ -14,17 +14,26 @@ import torch
 from src.utils import config
 
 
-def get_device(prefer_cuda: bool = False) -> str:
+def get_device(
+    prefer_cuda: bool = False,
+    prefer_mps: bool = False,
+) -> str:
     """Resolve o device de execução.
 
     Args:
         prefer_cuda: Se ``True``, usa "cuda" quando houver GPU disponível;
-            caso contrário, retorna "cpu".
+            tem prioridade sobre MPS quando ambos forem solicitados.
+        prefer_mps: Se ``True`` e CUDA não tiver sido selecionado, usa "mps"
+            quando uma GPU Apple Silicon estiver disponível.
 
     Returns:
-        "cuda" se solicitado e disponível, senão "cpu".
+        "cuda" ou "mps" quando solicitado e disponível; senão, "cpu".
     """
-    return "cuda" if prefer_cuda and torch.cuda.is_available() else "cpu"
+    if prefer_cuda and torch.cuda.is_available():
+        return "cuda"
+    if prefer_mps and torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
 
 
 def set_seed(seed: int = config.RANDOM_SEED) -> None:
