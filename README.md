@@ -22,9 +22,9 @@ volumes de métricas é custosa, sujeita a atrasos e dependente da experiência 
 monitora o sistema. Um detector automatizado pode apoiar equipes de operação, engenharia
 e observabilidade, apontando situações suspeitas que merecem análise.
 
-Nesta etapa inicial, o foco do projeto ainda não é entregar um modelo treinado, mas sim
-definir o problema, organizar a estrutura do repositório, documentar a base de dados
-pretendida e preparar as primeiras funções do pipeline.
+O projeto evoluiu de forma incremental: a estrutura do repositório foi definida, o pipeline
+de dados com NumPy (carregamento, limpeza e pré-processamento) está implementado e o
+modelo de detecção (autoencoder em PyTorch) está em integração.
 
 ## Base de dados: SMD (Server Machine Dataset)
 
@@ -69,9 +69,10 @@ prometer diagnósticos operacionais específicos, como identificar exatamente qu
 real do servidor falhou.
 
 > 📌 **Nota:** a escolha do **dataset SMD** e o recorte do problema foram **ratificados
-> pelo grupo** na reunião de alinhamento da Entrega 1. Esta versão entrega a **estrutura
-> organizada e tipada** do projeto; as funções estão com assinatura e contrato definidos,
-> e a implementação será preenchida na sequência.
+> pelo grupo** na reunião de alinhamento da Entrega 1. O projeto já conta com a **estrutura
+> organizada e tipada** e com o **pipeline de dados implementado** (carregamento → limpeza →
+> NumPy → split treino/validação → padronização). O modelo (autoencoder em PyTorch) está em
+> integração, com arquitetura e utilitários prontos e o laço de treino em andamento.
 
 ## Entendendo os dados e a estratégia de detecção
 
@@ -243,7 +244,7 @@ data/
 > de leitura usado pelo pipeline. Os arquivos baixados ficam **fora do controle de versão**
 > (cobertos pelo `.gitignore`), mantendo o repositório leve e reprodutível.
 
-## Estrutura do projeto (Entrega 1)
+## Estrutura do projeto
 
 ```
 .
@@ -255,21 +256,24 @@ data/
 │   ├── preprocessing/
 │   │   └── transform.py   # transformacoes e split dos dados
 │   ├── models/
-│   │   └── model.py       # definicao do modelo
+│   │   ├── model.py       # definicao do autoencoder (PyTorch)
+│   │   └── persistence.py # salvamento e carregamento do modelo
 │   ├── training/
 │   │   └── train.py       # rotina de treinamento
 │   ├── evaluation/
 │   │   └── metrics.py     # metricas de avaliacao
 │   └── utils/
-│       └── config.py      # configuracoes do pipeline
+│       ├── config.py      # configuracoes do pipeline
+│       └── torch_utils.py # device e reprodutibilidade (PyTorch)
 ├── main.py                # ponto de entrada do pipeline
 ├── requirements.txt
 └── README.md
 ```
 
 A estrutura segue a ideia de **separação de responsabilidades** e usa **type hints**
-nas funções (assinaturas e contratos definidos). A implementação das funções e os
-módulos de testes entram nas próximas entregas.
+em todas as funções. O pipeline de dados (carregamento, limpeza e pré-processamento
+NumPy) está implementado; os módulos de modelo e treino (PyTorch) estão em andamento.
+Os testes automatizados (unittest) entram na Entrega 4.
 
 ## Como executar
 
@@ -285,20 +289,76 @@ pip install -r requirements.txt
 python main.py
 ```
 
-## Funções iniciais
+## Funções do pipeline
 
-| Função | Módulo | Responsabilidade |
-|--------|--------|------------------|
-| `load_data(path)` | `src/data/loader.py` | Carrega a base de dados (CSV). |
-| `clean_data(data)` | `src/data/loader.py` | Remove duplicatas e valores ausentes. |
-| `standardize(X)` | `src/preprocessing/transform.py` | Padroniza atributos (z-score). |
-| `split_features_target(data, target_column)` | `src/preprocessing/transform.py` | Separa atributos e variavel alvo. |
-| `split_data(X, y)` | `src/preprocessing/transform.py` | Reserva o trecho final da serie para teste, em ordem temporal. |
-| `create_model()` | `src/models/model.py` | Cria e configura o modelo. |
-| `predict(model, X)` | `src/models/model.py` | Gera predicoes com o modelo treinado. |
-| `train_model(model, X_train, y_train)` | `src/training/train.py` | Executa a rotina de treinamento. |
-| `calculate_metrics(y_true, y_pred)` | `src/evaluation/metrics.py` | Calcula metricas de avaliacao. |
-| `main()` | `main.py` | Orquestra o pipeline. |
+As tabelas abaixo listam as funções públicas de cada módulo com seus contratos
+de entrada/saída. As marcadas como **(stub)** têm assinatura e docstring definidas,
+mas a implementação do corpo está pendente para a Entrega 3.
+
+### Carregamento e limpeza — `src/data/loader.py`
+
+| Função | Responsabilidade |
+|--------|-----------------|
+| `load_data(path)` | Lê um arquivo `.txt` do SMD (sem cabeçalho, separado por vírgula) e devolve um DataFrame, uma coluna por métrica. |
+| `clean_data(data)` | Remove linhas com valores ausentes ou não numéricos; preserva o índice original. |
+| `clean_aligned(*dataframes)` | Limpa dois ou mais DataFrames simultaneamente, removendo as mesmas linhas de todos para manter o alinhamento temporal (ex.: `test` + `test_label`). |
+
+### Pré-processamento NumPy — `src/preprocessing/transform.py`
+
+| Função | Responsabilidade |
+|--------|-----------------|
+| `standardize(X, mean=None, std=None)` | Padroniza a matriz por z-score. Sem `mean`/`std` faz fit+transform; com eles, só transform (aplica parâmetros do treino a validação/teste). Retorna `(X_pad, mean, std)`. |
+| `split_features_target(data, target_column)` | Separa um DataFrame em matriz de atributos `X` e array alvo `y` a partir do nome da coluna alvo. |
+| `split_data(X, y, test_size=0.2)` | Divide `X` e `y` em dois trechos consecutivos, preservando a ordem temporal. Retorna `(X_first, X_second, y_first, y_second)`. |
+
+### Modelo — `src/models/model.py`
+
+| Função / Classe | Responsabilidade |
+|----------------|-----------------|
+| `Autoencoder` | Classe `nn.Module`. Autoencoder MLP que recebe janelas `(batch, window_size, input_dim)`, achata, passa pelo encoder e decoder e devolve a reconstrução com o mesmo shape. |
+| `create_model(input_dim, window_size, hidden_dims, latent_dim, device)` | Instancia o `Autoencoder` com os hiperparâmetros informados e o move para o device de execução. Retorna o modelo pronto para treino. |
+| `reconstruction_error(model, X, window_size, device)` | Executa o modelo em modo de avaliação sobre janelas deslizantes de `X` e devolve o MSE do último timestep de cada janela (array 1-D). |
+
+### Persistência — `src/models/persistence.py` (stub)
+
+| Função | Responsabilidade |
+|--------|-----------------|
+| `save_model(model, path)` | Salva o `state_dict` do autoencoder em disco, criando o diretório de destino se necessário. |
+| `load_model(model, path, device)` | Carrega os pesos salvos em uma instância já criada, move para o device e coloca em modo de avaliação. |
+
+### Treinamento — `src/training/train.py` (stub)
+
+| Função | Responsabilidade |
+|--------|-----------------|
+| `build_dataloader(X, window_size, batch_size, shuffle, device)` | Extrai janelas deslizantes de `X`, monta um `TensorDataset(janela, janela)` e devolve um `DataLoader` em `float32`. |
+| `train_one_epoch(model, loader, optimizer, loss_fn, device)` | Executa uma época de treino e devolve a perda média de reconstrução. |
+| `evaluate_loss(model, loader, loss_fn, device)` | Calcula a perda média de reconstrução sem atualizar pesos (usado em validação e teste). |
+| `train_model(model, X_train, X_val, epochs, batch_size, learning_rate, window_size, device)` | Laço completo de treino/validação: monta os DataLoaders, itera por `epochs` épocas imprimindo o erro de treino e validação a cada uma, e devolve o histórico `{"train_loss": [...], "val_loss": [...]}`. |
+
+### Avaliação — `src/evaluation/metrics.py`
+
+| Função | Responsabilidade |
+|--------|-----------------|
+| `calculate_metrics(y_true, y_pred)` | Calcula precisão, recall, F1-score e acurácia a partir de arrays binários 0/1; devolve dicionário. |
+| `precision_score(y_true, y_pred)` | Precisão: TP / (TP + FP). |
+| `recall_score(y_true, y_pred)` | Recall: TP / (TP + FN). |
+| `f1_score(y_true, y_pred)` | F1: média harmônica de precisão e recall. |
+| `accuracy_score(y_true, y_pred)` | Acurácia: (TP + TN) / total. |
+| `reconstruction_threshold(errors_train, percentile)` **(stub)** | Define o limiar de anomalia pelo percentil dos erros de reconstrução do treino. |
+| `predict_anomalies(errors, threshold)` **(stub)** | Binariza os erros de reconstrução em rótulos 0/1 aplicando o limiar. |
+
+### Utilitários PyTorch — `src/utils/torch_utils.py`
+
+| Função | Responsabilidade |
+|--------|-----------------|
+| `get_device(prefer_cuda, prefer_mps)` | Resolve o device de execução: retorna `"cuda"` ou `"mps"` quando solicitado e disponível; caso contrário, `"cpu"`. |
+| `set_seed(seed)` | Fixa as sementes de `random`, NumPy e PyTorch (incluindo CUDA) para reprodutibilidade. |
+
+### Orquestração — `main.py`
+
+| Função | Responsabilidade |
+|--------|-----------------|
+| `main()` | Orquestra o pipeline: carrega os três arquivos do SMD, limpa, converte para NumPy, faz o split treino/validação, padroniza e imprime as dimensões dos conjuntos. O bloco de treino/avaliação PyTorch está preparado como esqueleto comentado, a ser ativado conforme os módulos de treinamento ficarem prontos. |
 
 ## Status das etapas
 
@@ -309,18 +369,22 @@ python main.py
 | 1 | Funções iniciais | ✅ Concluído |
 | 1 | Modularização e organização do código | ✅ Concluído |
 | 1 | Tipagem (type hints) | ✅ Concluído |
-| 2 | Uso adequado de NumPy | 🔄 Em andamento |
-| 3 | Implementação em PyTorch (partes 1 e 2) | ⬜ Pendente |
+| 2 | Uso adequado de NumPy | ✅ Concluído |
+| 3 | Implementação em PyTorch (partes 1 e 2) | 🔄 Em andamento |
 | 4 | Testes automatizados (unittest) | ⬜ Pendente |
 | 5 | Requisitos | ⬜ Pendente |
 | 6 | Design/arquitetura + Git e colaboração | ⬜ Pendente |
 | Final | Apresentação | ⬜ Pendente |
 
-> Entrega 2 (em andamento): o pré-processamento com **NumPy** em
-> `src/preprocessing/transform.py` (padronização, separação atributos/alvo e divisão
-> treino/teste) já está implementado. Faltam o carregamento e a limpeza dos dados
-> (`load_data`/`clean_data`) e a orquestração do `main.py`, além de definir o **recorte
-> inicial do SMD** (começar por uma única máquina) para o primeiro experimento.
+> **Entrega 2 concluída:** pipeline de dados NumPy funcional de ponta a ponta —
+> carregamento (`load_data`, `clean_data`, `clean_aligned`), conversão para NumPy,
+> split treino/validação temporal e padronização z-score. O `python main.py` roda o
+> pipeline completo e imprime as dimensões dos conjuntos. **Entrega 3 em andamento:**
+> a arquitetura do autoencoder (`Autoencoder`, `create_model`, `reconstruction_error`)
+> e os utilitários de PyTorch (`get_device`, `set_seed`) já estão integrados. Faltam
+> o laço de treino (`train_model` e auxiliares em `src/training/train.py`), a
+> persistência do modelo (`save_model`/`load_model`) e a binarização por erro de
+> reconstrução (`reconstruction_threshold`/`predict_anomalies`).
 
 ## Equipe
 
