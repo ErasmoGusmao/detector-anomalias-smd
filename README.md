@@ -70,9 +70,10 @@ real do servidor falhou.
 
 > 📌 **Nota:** a escolha do **dataset SMD** e o recorte do problema foram **ratificados
 > pelo grupo** na reunião de alinhamento da Entrega 1. O projeto já conta com a **estrutura
-> organizada e tipada** e com o **pipeline de dados implementado** (carregamento → limpeza →
-> NumPy → split treino/validação → padronização). O modelo (autoencoder em PyTorch) está em
-> integração, com arquitetura e utilitários prontos e o laço de treino em andamento.
+> organizada e tipada**, com o **pipeline de dados implementado** (carregamento → limpeza →
+> NumPy → split treino/validação → padronização) e com o **laço de treino do autoencoder
+> (PyTorch) implementado** (arquitetura, utilitários e `train_model` prontos). Restam como
+> pendência da Entrega 3 a persistência do modelo e a binarização por erro de reconstrução.
 
 ## Entendendo os dados e a estratégia de detecção
 
@@ -272,7 +273,10 @@ data/
 
 A estrutura segue a ideia de **separação de responsabilidades** e usa **type hints**
 em todas as funções. O pipeline de dados (carregamento, limpeza e pré-processamento
-NumPy) está implementado; os módulos de modelo e treino (PyTorch) estão em andamento.
+NumPy) está implementado; o módulo de modelo (`model.py`) e o laço de treino
+(`train.py`) estão implementados. A persistência do modelo e a binarização por erro de
+reconstrução (`persistence.py`, `metrics.py` — funções de threshold/predict) ainda são
+stubs pendentes para conclusão da Entrega 3.
 Os testes automatizados (unittest) entram na Entrega 4.
 
 ## Como executar
@@ -326,7 +330,7 @@ mas a implementação do corpo está pendente para a Entrega 3.
 | `save_model(model, path)` | Salva o `state_dict` do autoencoder em disco, criando o diretório de destino se necessário. |
 | `load_model(model, path, device)` | Carrega os pesos salvos em uma instância já criada, move para o device e coloca em modo de avaliação. |
 
-### Treinamento — `src/training/train.py` (stub)
+### Treinamento — `src/training/train.py`
 
 | Função | Responsabilidade |
 |--------|-----------------|
@@ -380,11 +384,13 @@ mas a implementação do corpo está pendente para a Entrega 3.
 > carregamento (`load_data`, `clean_data`, `clean_aligned`), conversão para NumPy,
 > split treino/validação temporal e padronização z-score. O `python main.py` roda o
 > pipeline completo e imprime as dimensões dos conjuntos. **Entrega 3 em andamento:**
-> a arquitetura do autoencoder (`Autoencoder`, `create_model`, `reconstruction_error`)
-> e os utilitários de PyTorch (`get_device`, `set_seed`) já estão integrados. Faltam
-> o laço de treino (`train_model` e auxiliares em `src/training/train.py`), a
-> persistência do modelo (`save_model`/`load_model`) e a binarização por erro de
-> reconstrução (`reconstruction_threshold`/`predict_anomalies`).
+> a arquitetura do autoencoder (`Autoencoder`, `create_model`, `reconstruction_error`),
+> os utilitários de PyTorch (`get_device`, `set_seed`) e o laço completo de treino
+> (`build_dataloader`, `train_one_epoch`, `evaluate_loss`, `train_model` em
+> `src/training/train.py`) já estão implementados. Faltam a persistência do modelo
+> (`save_model`/`load_model` em `src/models/persistence.py`) e a binarização por erro
+> de reconstrução (`reconstruction_threshold`/`predict_anomalies` em
+> `src/evaluation/metrics.py`).
 
 ## Equipe
 
