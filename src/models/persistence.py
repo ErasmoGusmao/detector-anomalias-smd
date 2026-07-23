@@ -4,13 +4,13 @@ Isola a serialização do autoencoder da definição da arquitetura (``model.py`
 e do laço de treino (``training/train.py``). Usa o ``state_dict`` do PyTorch:
 salva apenas os pesos, então o carregamento exige uma instância com a **mesma
 arquitetura**.
-
-ESQUELETO (Entrega 3): a implementação do corpo é tarefa da equipe.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
+
+import torch
 
 from src.models.model import Autoencoder
 from src.utils import config
@@ -25,9 +25,8 @@ def save_model(model: Autoencoder, path: Path = config.MODEL_PATH) -> None:
         model: Autoencoder treinado.
         path: Caminho do arquivo ``.pt`` de destino.
     """
-    # TODO(equipe): path.parent.mkdir(parents=True, exist_ok=True);
-    # torch.save(model.state_dict(), path).
-    raise NotImplementedError("TODO(equipe): salvar o state_dict do modelo")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(model.state_dict(), path)
 
 
 def load_model(
@@ -46,6 +45,7 @@ def load_model(
     Returns:
         O mesmo ``model``, com os pesos carregados e em modo de avaliação.
     """
-    # TODO(equipe): model.load_state_dict(torch.load(path, map_location=device));
-    # model.to(device); model.eval(); retornar model.
-    raise NotImplementedError("TODO(equipe): carregar o state_dict no modelo")
+    model.load_state_dict(torch.load(path, map_location=device))
+    model.to(device)
+    model.eval()
+    return model

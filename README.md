@@ -71,9 +71,9 @@ real do servidor falhou.
 > 📌 **Nota:** a escolha do **dataset SMD** e o recorte do problema foram **ratificados
 > pelo grupo** na reunião de alinhamento da Entrega 1. O projeto já conta com a **estrutura
 > organizada e tipada**, com o **pipeline de dados implementado** (carregamento → limpeza →
-> NumPy → split treino/validação → padronização) e com o **laço de treino do autoencoder
-> (PyTorch) implementado** (arquitetura, utilitários e `train_model` prontos). Restam como
-> pendência da Entrega 3 a persistência do modelo e a binarização por erro de reconstrução.
+> NumPy → split treino/validação → padronização) e com o **pipeline PyTorch completo**
+> (arquitetura, utilitários, laço de treino, persistência do modelo e binarização por erro
+> de reconstrução — tudo implementado e funcional).
 
 ## Entendendo os dados e a estratégia de detecção
 
@@ -206,6 +206,30 @@ corretamente localizadas).
 
 O conjunto de dados SMD é desbalanceado, pois o número de instantes normais é significativamente maior do que o de instantes anômalos. Nesse contexto, a **acurácia (accuracy)** não é a métrica mais adequada para avaliar o desempenho do modelo, uma vez que um classificador trivial (*dummy*), que sempre indica a classe normal, ainda obteria uma acurácia elevada. Por esse motivo, este projeto utiliza como principais métricas de avaliação a **precisão (*precision*)**, a **sensibilidade (*recall*)** e a **medida F1 (*F1-score*)**, deixando a **acurácia** apenas como uma métrica complementar.
 
+### 7. O que esperar na saída do `python main.py`: duas bases de erro
+
+Ao rodar o pipeline completo da Entrega 3, a saída imprime três tipos de valor numérico
+relacionados ao erro de reconstrução. Eles **não são comparáveis diretamente** porque
+medem coisas diferentes sobre conjuntos diferentes:
+
+| Saída impressa | Calculado por | O que mede | Sobre qual conjunto |
+|----------------|--------------|------------|---------------------|
+| `Erro de treino` / `Erro de validação` (por época) | `evaluate_loss` via `nn.MSELoss` | MSE médio da **janela inteira** (todos os `window_size` timesteps × features) | Treino / validação — dados 100% normais, padronizados com a própria média/desvio |
+| `Erro de reconstrução no teste` | `evaluate_loss` via `nn.MSELoss` | MSE médio da **janela inteira** (mesma fórmula acima) | Teste — dados normais **e** anômalos, padronizados com as estatísticas do **treino** |
+| Erros que alimentam o **limiar e a predição** | `reconstruction_error` | MSE apenas do **último timestep** de cada janela | Treino (para calcular o limiar) e teste (para classificar) |
+
+**Por que o erro de teste pode ficar ordens de magnitude acima do erro de treino/validação:**
+o conjunto de teste do SMD é padronizado com a média e o desvio padrão calculados sobre
+o treino (que é 100% normal). Janelas anômalas do teste produzem z-scores muito altos
+nessa escala, elevando o MSE da janela inteira. Isso é **comportamento esperado do
+método**, não um defeito do modelo ou do pipeline.
+
+**Sobre o limiar de anomalia (`ANOMALY_PERCENTILE = 99.0`):**
+o limiar é definido como o percentil 99 dos erros de reconstrução *do conjunto de treino*
+(calculados por `reconstruction_error`, que usa apenas o último timestep de cada janela).
+Como o modelo foi treinado nesses mesmos dados, esses erros são otimisticamente baixos —
+escolha padrão e conhecida do método de detecção não-supervisionada por reconstrução.
+
 ## Como obter a base de dados
 
 Os arquivos do SMD **não são versionados** neste repositório — datasets ficam fora do Git
@@ -272,11 +296,10 @@ data/
 ```
 
 A estrutura segue a ideia de **separação de responsabilidades** e usa **type hints**
-em todas as funções. O pipeline de dados (carregamento, limpeza e pré-processamento
-NumPy) está implementado; o módulo de modelo (`model.py`) e o laço de treino
-(`train.py`) estão implementados. A persistência do modelo e a binarização por erro de
-reconstrução (`persistence.py`, `metrics.py` — funções de threshold/predict) ainda são
-stubs pendentes para conclusão da Entrega 3.
+em todas as funções. O pipeline está completamente implementado: carregamento e limpeza
+(`loader.py`), pré-processamento NumPy (`transform.py`), modelo autoencoder (`model.py`),
+laço de treino (`train.py`), persistência do modelo (`persistence.py`) e avaliação com
+limiar e binarização (`metrics.py`) — todos os módulos funcionais.
 Os testes automatizados (unittest) entram na Entrega 4.
 
 ## Como executar
@@ -289,15 +312,14 @@ python -m venv .venv
 # 2. instalar dependências
 pip install -r requirements.txt
 
-# 3. ponto de entrada do pipeline (implementação das funções em andamento)
+# 3. executar o pipeline completo
 python main.py
 ```
 
 ## Funções do pipeline
 
 As tabelas abaixo listam as funções públicas de cada módulo com seus contratos
-de entrada/saída. As marcadas como **(stub)** têm assinatura e docstring definidas,
-mas a implementação do corpo está pendente para a Entrega 3.
+de entrada/saída.
 
 ### Carregamento e limpeza — `src/data/loader.py`
 
@@ -323,7 +345,7 @@ mas a implementação do corpo está pendente para a Entrega 3.
 | `create_model(input_dim, window_size, hidden_dims, latent_dim, device)` | Instancia o `Autoencoder` com os hiperparâmetros informados e o move para o device de execução. Retorna o modelo pronto para treino. |
 | `reconstruction_error(model, X, window_size, device)` | Executa o modelo em modo de avaliação sobre janelas deslizantes de `X` e devolve o MSE do último timestep de cada janela (array 1-D). |
 
-### Persistência — `src/models/persistence.py` (stub)
+### Persistência — `src/models/persistence.py`
 
 | Função | Responsabilidade |
 |--------|-----------------|
@@ -348,8 +370,8 @@ mas a implementação do corpo está pendente para a Entrega 3.
 | `recall_score(y_true, y_pred)` | Recall: TP / (TP + FN). |
 | `f1_score(y_true, y_pred)` | F1: média harmônica de precisão e recall. |
 | `accuracy_score(y_true, y_pred)` | Acurácia: (TP + TN) / total. |
-| `reconstruction_threshold(errors_train, percentile)` **(stub)** | Define o limiar de anomalia pelo percentil dos erros de reconstrução do treino. |
-| `predict_anomalies(errors, threshold)` **(stub)** | Binariza os erros de reconstrução em rótulos 0/1 aplicando o limiar. |
+| `reconstruction_threshold(errors_train, percentile)` | Define o limiar de anomalia pelo percentil dos erros de reconstrução do treino. |
+| `predict_anomalies(errors, threshold)` | Binariza os erros de reconstrução em rótulos 0/1 aplicando o limiar. |
 
 ### Utilitários PyTorch — `src/utils/torch_utils.py`
 
@@ -362,7 +384,7 @@ mas a implementação do corpo está pendente para a Entrega 3.
 
 | Função | Responsabilidade |
 |--------|-----------------|
-| `main()` | Orquestra o pipeline: carrega os três arquivos do SMD, limpa, converte para NumPy, faz o split treino/validação, padroniza e imprime as dimensões dos conjuntos. O bloco de treino/avaliação PyTorch está preparado como esqueleto comentado, a ser ativado conforme os módulos de treinamento ficarem prontos. |
+| `main()` | Orquestra o pipeline completo: carrega os três arquivos do SMD (`train`, `test`, `test_label`) → limpa com `clean_data`/`clean_aligned` → converte para NumPy → split treino/validação temporal → padroniza (fit no treino, transform no restante) → cria e treina o autoencoder imprimindo o erro de treino e validação por época → calcula e imprime o erro de reconstrução no teste → salva o modelo em disco → define o limiar pelo percentil dos erros de reconstrução do treino → prediz anomalias no teste → imprime as métricas finais (precision, recall, F1, accuracy). |
 
 ## Status das etapas
 
@@ -374,23 +396,23 @@ mas a implementação do corpo está pendente para a Entrega 3.
 | 1 | Modularização e organização do código | ✅ Concluído |
 | 1 | Tipagem (type hints) | ✅ Concluído |
 | 2 | Uso adequado de NumPy | ✅ Concluído |
-| 3 | Implementação em PyTorch (partes 1 e 2) | 🔄 Em andamento |
+| 3 | Implementação em PyTorch (partes 1 e 2) | ✅ Concluído |
 | 4 | Testes automatizados (unittest) | ⬜ Pendente |
 | 5 | Requisitos | ⬜ Pendente |
 | 6 | Design/arquitetura + Git e colaboração | ⬜ Pendente |
 | Final | Apresentação | ⬜ Pendente |
 
-> **Entrega 2 concluída:** pipeline de dados NumPy funcional de ponta a ponta —
+> **Entregas 2 e 3 concluídas:** pipeline de dados NumPy funcional de ponta a ponta —
 > carregamento (`load_data`, `clean_data`, `clean_aligned`), conversão para NumPy,
-> split treino/validação temporal e padronização z-score. O `python main.py` roda o
-> pipeline completo e imprime as dimensões dos conjuntos. **Entrega 3 em andamento:**
-> a arquitetura do autoencoder (`Autoencoder`, `create_model`, `reconstruction_error`),
-> os utilitários de PyTorch (`get_device`, `set_seed`) e o laço completo de treino
-> (`build_dataloader`, `train_one_epoch`, `evaluate_loss`, `train_model` em
-> `src/training/train.py`) já estão implementados. Faltam a persistência do modelo
-> (`save_model`/`load_model` em `src/models/persistence.py`) e a binarização por erro
-> de reconstrução (`reconstruction_threshold`/`predict_anomalies` em
-> `src/evaluation/metrics.py`).
+> split treino/validação temporal e padronização z-score. **A Entrega 3 está completa:**
+> arquitetura do autoencoder (`Autoencoder`, `create_model`, `reconstruction_error`),
+> utilitários de PyTorch (`get_device`, `set_seed`), laço completo de treino
+> (`build_dataloader`, `train_one_epoch`, `evaluate_loss`, `train_model`), persistência
+> do modelo (`save_model`/`load_model` em `src/models/persistence.py`) e binarização
+> por erro de reconstrução (`reconstruction_threshold`/`predict_anomalies` em
+> `src/evaluation/metrics.py`) — todos implementados. O `python main.py` executa o
+> pipeline de ponta a ponta, imprime erros de treino/validação por época, erro de
+> reconstrução no teste e as métricas finais (precision, recall, F1, accuracy).
 
 ## Equipe
 
