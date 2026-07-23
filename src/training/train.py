@@ -1,8 +1,8 @@
 """Treinamento do detector de anomalias (autoencoder em PyTorch).
 
-Orquestra a preparacao dos dados em tensores/janelas, o laco de treino e a
-avaliacao de perda. O treino e nao-supervisionado: o alvo de reconstrucao e a
-propria janela de entrada (``X -> X``).
+Orquestra a preparação dos dados em tensores/janelas, o laço de treino e a
+avaliação de perda. O treino é não-supervisionado: o alvo de reconstrução é a
+própria janela de entrada (``X -> X``).
 """
 
 from __future__ import annotations
@@ -23,23 +23,23 @@ def build_dataloader(
     shuffle: bool = True,
     device: str = config.DEVICE,
 ) -> DataLoader:
-    """Cria um ``DataLoader`` de janelas deslizantes para reconstrucao.
+    """Cria um ``DataLoader`` de janelas deslizantes para reconstrução.
 
     Extrai janelas de tamanho ``window_size`` de ``X`` e monta um
-    ``TensorDataset`` em que entrada e alvo sao a mesma janela (autoencoder).
-    Os tensores permanecem em CPU; os lotes sao movidos para ``device`` nos
-    lacos de treino e avaliacao.
+    ``TensorDataset`` em que entrada e alvo são a mesma janela (autoencoder).
+    Os tensores permanecem em CPU; os lotes são movidos para ``device`` nos
+    laços de treino e avaliação.
 
     Args:
         X: Matriz padronizada, shape ``(n_amostras, n_features)``.
         window_size: Tamanho da janela temporal.
         batch_size: Tamanho do lote.
         shuffle: Embaralhar as janelas (``True`` no treino, ``False`` em
-            validacao/teste para preservar a ordem temporal).
-        device: Device de execucao usado depois nos lacos.
+            validação/teste para preservar a ordem temporal).
+        device: Device de execução usado depois nos laços.
 
     Returns:
-        ``DataLoader`` cujos lotes sao pares ``(janela, janela)`` de shape
+        ``DataLoader`` cujos lotes são pares ``(janela, janela)`` de shape
         ``(batch, window_size, n_features)``, em ``float32``.
     """
     _ = device
@@ -75,17 +75,17 @@ def train_one_epoch(
     loss_fn: nn.Module,
     device: str = config.DEVICE,
 ) -> float:
-    """Executa uma epoca de treino.
+    """Executa uma época de treino.
 
     Args:
         model: Autoencoder em modo de treino.
         loader: ``DataLoader`` de treino (pares janela/janela).
         optimizer: Otimizador (ex.: ``torch.optim.Adam``).
-        loss_fn: Funcao de perda de reconstrucao (ex.: ``nn.MSELoss``).
-        device: Device de execucao.
+        loss_fn: Função de perda de reconstrução (ex.: ``nn.MSELoss``).
+        device: Device de execução.
 
     Returns:
-        Perda media de reconstrucao sobre a epoca.
+        Perda média de reconstrução sobre a época.
     """
     target_device = torch.device(device)
     model.train()
@@ -108,7 +108,7 @@ def train_one_epoch(
         total_samples += batch_size_atual
 
     if total_samples == 0:
-        raise ValueError("DataLoader de treino nao contem amostras")
+        raise ValueError("DataLoader de treino não contém amostras")
 
     return total_loss / total_samples
 
@@ -119,18 +119,18 @@ def evaluate_loss(
     loss_fn: nn.Module,
     device: str = config.DEVICE,
 ) -> float:
-    """Calcula a perda media de reconstrucao sem atualizar os pesos.
+    """Calcula a perda média de reconstrução sem atualizar os pesos.
 
-    Usada para a perda de validacao e para a perda de teste.
+    Usada para a perda de validação e para a perda de teste.
 
     Args:
         model: Autoencoder a avaliar.
-        loader: ``DataLoader`` de validacao ou teste.
-        loss_fn: Mesma funcao de perda usada no treino.
-        device: Device de execucao.
+        loader: ``DataLoader`` de validação ou teste.
+        loss_fn: Mesma função de perda usada no treino.
+        device: Device de execução.
 
     Returns:
-        Perda media de reconstrucao sobre o conjunto.
+        Perda média de reconstrução sobre o conjunto.
     """
     target_device = torch.device(device)
     model.eval()
@@ -151,7 +151,7 @@ def evaluate_loss(
             total_samples += batch_size_atual
 
     if total_samples == 0:
-        raise ValueError("DataLoader de avaliacao nao contem amostras")
+        raise ValueError("DataLoader de avaliação não contém amostras")
 
     return total_loss / total_samples
 
@@ -166,25 +166,25 @@ def train_model(
     window_size: int = config.WINDOW_SIZE,
     device: str = config.DEVICE,
 ) -> dict[str, list[float]]:
-    """Executa o laco completo de treino/validacao do autoencoder.
+    """Executa o laço completo de treino/validação do autoencoder.
 
-    Monta os ``DataLoader`` de treino e validacao, o otimizador e a perda,
-    itera por ``epochs`` epocas e imprime o erro de treino e de validacao a
-    cada epoca.
+    Monta os ``DataLoader`` de treino e validação, o otimizador e a perda,
+    itera por ``epochs`` épocas e imprime o erro de treino e de validação a
+    cada época.
 
     Args:
         model: Autoencoder criado por ``create_model``.
         X_train: Matriz de treino padronizada.
-        X_val: Matriz de validacao padronizada (estatisticas do treino).
-        epochs: Numero de epocas.
+        X_val: Matriz de validação padronizada (estatísticas do treino).
+        epochs: Número de épocas.
         batch_size: Tamanho do lote.
         learning_rate: Taxa de aprendizado do otimizador.
         window_size: Tamanho da janela temporal.
-        device: Device de execucao.
+        device: Device de execução.
 
     Returns:
-        Historico das perdas: ``{"train_loss": [...], "val_loss": [...]}`` com
-        uma entrada por epoca.
+        Histórico das perdas: ``{"train_loss": [...], "val_loss": [...]}`` com
+        uma entrada por época.
     """
     if epochs <= 0:
         raise ValueError("epochs deve ser maior que zero")
@@ -230,9 +230,9 @@ def train_model(
         history["val_loss"].append(val_loss)
 
         print(
-            f"Epoch {epoch:03d}/{epochs:03d} | "
-            f"Train Loss: {train_loss:.6f} | "
-            f"Validation Loss: {val_loss:.6f}"
+            f"Época {epoch:03d}/{epochs:03d} | "
+            f"Erro de treino: {train_loss:.6f} | "
+            f"Erro de validação: {val_loss:.6f}"
         )
 
     return history
