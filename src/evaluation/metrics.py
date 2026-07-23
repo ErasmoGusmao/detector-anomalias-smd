@@ -165,10 +165,9 @@ def calculate_metrics(
 
 
 # ---------------------------------------------------------------------------
-# Binarização por erro de reconstrução (Entrega 3 — ESQUELETO)
+# Binarização por erro de reconstrução (Entrega 3)
 # ---------------------------------------------------------------------------
-# Ligam o erro contínuo do autoencoder às métricas binárias acima. Corpo é
-# tarefa da equipe.
+# Ligam o erro contínuo do autoencoder às métricas binárias acima.
 
 
 def reconstruction_threshold(
@@ -187,8 +186,7 @@ def reconstruction_threshold(
     Returns:
         Valor de limiar do erro de reconstrução.
     """
-    # TODO(equipe): retornar float(np.percentile(errors_train, percentile)).
-    raise NotImplementedError("TODO(equipe): calcular o limiar de anomalia")
+    return float(np.percentile(errors_train, percentile))
 
 
 def predict_anomalies(errors: np.ndarray, threshold: float) -> np.ndarray:
@@ -199,15 +197,15 @@ def predict_anomalies(errors: np.ndarray, threshold: float) -> np.ndarray:
         threshold: Limiar; erro ``>= threshold`` vira 1 (anomalia).
 
     Returns:
-        Array 1-D de inteiros 0/1.
+        Array 1-D de inteiros 0/1, com um rótulo por janela.
 
     Nota:
-        Para alimentar ``calculate_metrics``/``precision_score`` etc., a saída
-        precisa ter o **mesmo shape 1-D de ``y_test``**. Como o erro é por
-        janela (``n_amostras - window_size + 1`` valores), a equipe deve
-        alinhar janela → timestep aqui (ex.: repetir/deslocar o rótulo da
-        janela para cobrir seus timesteps) antes de comparar com ``y_test``.
+        A saída tem **um rótulo por janela** (mesmo comprimento de ``errors``,
+        ``n_amostras - window_size + 1``). Cada erro está associado ao **último
+        timestep** de sua janela (ver ``reconstruction_error`` em ``model.py``);
+        por isso o alinhamento com ``y_test`` é feito **fatiando os rótulos**
+        (``y_test[window_size - 1:]``) no ponto de comparação — e não expandindo
+        as predições aqui —, garantindo o mesmo shape 1-D exigido por
+        ``calculate_metrics``.
     """
-    # TODO(equipe): aplicar o limiar (errors >= threshold) e devolver
-    # np.ndarray 1-D de int alinhado com y_test.
-    raise NotImplementedError("TODO(equipe): binarizar os erros em rótulos 0/1")
+    return (np.asarray(errors) >= threshold).astype(int)

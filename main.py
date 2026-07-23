@@ -1,6 +1,8 @@
-"""Ponto de entrada do pipeline (Entrega 2).
+"""Ponto de entrada do pipeline do detector de anomalias (SMD).
 
-Orquestra o carregamento, a limpeza e o pré-processamento em NumPy.
+Orquestra o pipeline completo: carregamento e limpeza dos dados, pré-processamento
+em NumPy, treino do autoencoder (PyTorch) com erro de treino/validação por época,
+erro de reconstrução no teste, salvamento do modelo e avaliação das anomalias.
 """
 
 from __future__ import annotations
@@ -8,15 +10,25 @@ from __future__ import annotations
 import logging
 
 import numpy as np
+import torch.nn as nn
 
 from src.data.loader import clean_aligned, clean_data, load_data
+from src.evaluation.metrics import (
+    calculate_metrics,
+    predict_anomalies,
+    reconstruction_threshold,
+)
+from src.models.model import create_model, reconstruction_error
+from src.models.persistence import save_model
 from src.preprocessing.transform import split_data, standardize
+from src.training.train import build_dataloader, evaluate_loss, train_model
 from src.utils import config
+from src.utils.torch_utils import get_device, set_seed
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(name)s - %(message)s")
 
 def main() -> None:
-    """Executa o pipeline de carregamento e pré-processamento."""
+    """Executa o pipeline completo de dados, treino e avaliação."""
 
     # Carregamento
     train_raw = load_data(config.TRAIN_PATH)
@@ -62,41 +74,35 @@ def main() -> None:
     # =======================================================================
     # == Treino e avaliação (Entrega 3 — PyTorch) ==
     # =======================================================================
-    # ESQUELETO: a costura abaixo consome X_train, X_val, X_test e y_test já
-    # produzidos acima. Está comentada porque os módulos de modelo/treino
-    # ainda são stubs; a equipe descomenta conforme cada PR fica pronto.
-    #
-    # Imports necessários (mover para o topo ao ativar):
-    #   from src.models.model import create_model, reconstruction_error
-    #   from src.models.persistence import save_model
-    #   from src.training.train import build_dataloader, evaluate_loss, train_model
-    #   from src.evaluation.metrics import (
-    #       calculate_metrics, predict_anomalies, reconstruction_threshold,
-    #   )
-    #   from src.utils.torch_utils import get_device, set_seed
-    #   import torch.nn as nn
-    #
-    # set_seed()
-    # device = get_device(prefer_cuda=False)
-    #
-    # # Modelo e treino (imprime erro de treino e validação por época).
-    # model = create_model(input_dim=X_train.shape[1], device=device)
-    # history = train_model(model, X_train, X_val, device=device)
-    #
-    # # Erro de teste (requisito: imprimir o erro de teste).
-    # test_loader = build_dataloader(X_test, shuffle=False, device=device)
-    # test_loss = evaluate_loss(model, test_loader, nn.MSELoss(), device=device)
-    # print(f"Erro de reconstrução no teste: {test_loss:.6f}")
-    #
-    # # Persistência (requisito: salvar o modelo).
-    # save_model(model)
-    #
-    # # Avaliação de anomalias (fecha o ciclo com as métricas da Entrega 4).
-    # err_train = reconstruction_error(model, X_train, device=device)
-    # threshold = reconstruction_threshold(err_train, config.ANOMALY_PERCENTILE)
-    # err_test = reconstruction_error(model, X_test, device=device)
-    # y_pred = predict_anomalies(err_test, threshold)
-    # print(calculate_metrics(y_test, y_pred))
+    print("== Treino e avaliação (Entrega 3) ==")
+    set_seed()
+    device = get_device(prefer_cuda=False)
+
+    # Modelo e treino (imprime o erro de treino e de validação por época).
+    model = create_model(input_dim=X_train.shape[1], device=device)
+    train_model(model, X_train, X_val, device=device)
+
+    # Erro de reconstrução no teste (requisito: imprimir o erro de teste).
+    test_loader = build_dataloader(X_test, shuffle=False, device=device)
+    test_loss = evaluate_loss(model, test_loader, nn.MSELoss(), device=device)
+    print(f"Erro de reconstrução no teste: {test_loss:.6f}")
+
+    # Persistência do modelo treinado (requisito: salvar o modelo).
+    save_model(model)
+    print(f"Modelo salvo em: {config.MODEL_PATH}")
+
+    # Avaliação de anomalias: limiar pelo erro do treino, predição no teste.
+    err_train = reconstruction_error(model, X_train, device=device)
+    threshold = reconstruction_threshold(err_train, config.ANOMALY_PERCENTILE)
+    err_test = reconstruction_error(model, X_test, device=device)
+    y_pred = predict_anomalies(err_test, threshold)
+
+    # Alinha janela → timestep: cada erro corresponde ao último timestep de sua
+    # janela, então os rótulos de teste começam em WINDOW_SIZE - 1.
+    y_test_aligned = y_test[config.WINDOW_SIZE - 1:]
+    metrics = calculate_metrics(y_test_aligned, y_pred)
+    print(f"Limiar de anomalia (p{config.ANOMALY_PERCENTILE:g}): {threshold:.6f}")
+    print(f"Métricas de detecção: {metrics}")
 
 
 if __name__ == "__main__":
