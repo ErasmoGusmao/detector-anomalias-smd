@@ -83,6 +83,11 @@ def main() -> None:
     train_model(model, X_train, X_val, device=device)
 
     # Erro de reconstrução no teste (requisito: imprimir o erro de teste).
+    # Nota: este erro é a MSE da JANELA INTEIRA (todos os timesteps), base
+    # distinta do erro por-último-timestep usado no limiar/predição adiante.
+    # Sobre o teste do SMD (padronizado com as estatísticas do treino), ele
+    # pode ficar ordens de magnitude acima do erro de treino/validação, pois
+    # janelas anômalas geram z-scores altos — comportamento esperado do método.
     test_loader = build_dataloader(X_test, shuffle=False, device=device)
     test_loss = evaluate_loss(model, test_loader, nn.MSELoss(), device=device)
     print(f"Erro de reconstrução no teste: {test_loss:.6f}")
@@ -92,6 +97,9 @@ def main() -> None:
     print(f"Modelo salvo em: {config.MODEL_PATH}")
 
     # Avaliação de anomalias: limiar pelo erro do treino, predição no teste.
+    # O limiar é o percentil ANOMALY_PERCENTILE dos erros de reconstrução do
+    # treino (100% normal no SMD). Como o modelo foi treinado nesses dados, os
+    # erros são otimisticamente baixos — escolha padrão do método não-supervisionado.
     err_train = reconstruction_error(model, X_train, device=device)
     threshold = reconstruction_threshold(err_train, config.ANOMALY_PERCENTILE)
     err_test = reconstruction_error(model, X_test, device=device)

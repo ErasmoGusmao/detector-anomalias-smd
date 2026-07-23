@@ -206,6 +206,30 @@ corretamente localizadas).
 
 O conjunto de dados SMD é desbalanceado, pois o número de instantes normais é significativamente maior do que o de instantes anômalos. Nesse contexto, a **acurácia (accuracy)** não é a métrica mais adequada para avaliar o desempenho do modelo, uma vez que um classificador trivial (*dummy*), que sempre indica a classe normal, ainda obteria uma acurácia elevada. Por esse motivo, este projeto utiliza como principais métricas de avaliação a **precisão (*precision*)**, a **sensibilidade (*recall*)** e a **medida F1 (*F1-score*)**, deixando a **acurácia** apenas como uma métrica complementar.
 
+### 7. O que esperar na saída do `python main.py`: duas bases de erro
+
+Ao rodar o pipeline completo da Entrega 3, a saída imprime três tipos de valor numérico
+relacionados ao erro de reconstrução. Eles **não são comparáveis diretamente** porque
+medem coisas diferentes sobre conjuntos diferentes:
+
+| Saída impressa | Calculado por | O que mede | Sobre qual conjunto |
+|----------------|--------------|------------|---------------------|
+| `Erro de treino` / `Erro de validação` (por época) | `evaluate_loss` via `nn.MSELoss` | MSE médio da **janela inteira** (todos os `window_size` timesteps × features) | Treino / validação — dados 100% normais, padronizados com a própria média/desvio |
+| `Erro de reconstrução no teste` | `evaluate_loss` via `nn.MSELoss` | MSE médio da **janela inteira** (mesma fórmula acima) | Teste — dados normais **e** anômalos, padronizados com as estatísticas do **treino** |
+| Erros que alimentam o **limiar e a predição** | `reconstruction_error` | MSE apenas do **último timestep** de cada janela | Treino (para calcular o limiar) e teste (para classificar) |
+
+**Por que o erro de teste pode ficar ordens de magnitude acima do erro de treino/validação:**
+o conjunto de teste do SMD é padronizado com a média e o desvio padrão calculados sobre
+o treino (que é 100% normal). Janelas anômalas do teste produzem z-scores muito altos
+nessa escala, elevando o MSE da janela inteira. Isso é **comportamento esperado do
+método**, não um defeito do modelo ou do pipeline.
+
+**Sobre o limiar de anomalia (`ANOMALY_PERCENTILE = 99.0`):**
+o limiar é definido como o percentil 99 dos erros de reconstrução *do conjunto de treino*
+(calculados por `reconstruction_error`, que usa apenas o último timestep de cada janela).
+Como o modelo foi treinado nesses mesmos dados, esses erros são otimisticamente baixos —
+escolha padrão e conhecida do método de detecção não-supervisionada por reconstrução.
+
 ## Como obter a base de dados
 
 Os arquivos do SMD **não são versionados** neste repositório — datasets ficam fora do Git
