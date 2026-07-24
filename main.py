@@ -117,14 +117,14 @@ def main() -> None:
     print(f"Métricas de detecção: {metrics}")
 
     # Persistencia dos resultados de avaliacao
-results = {
-    "test_loss": test_loss,
-    "threshold": threshold,
-    **metrics,
-}
-results_path = config.MODEL_DIR / "results.json"
-with open(results_path, "w") as f:
-    json.dump(results, f, indent=2)
+    results = {
+        "test_loss": test_loss,
+        "threshold": threshold,
+        **metrics,
+    }
+    results_path = config.MODEL_DIR / "results.json"
+    with open(results_path, "w") as f:
+        json.dump(results, f, indent=2)
     print(f"Resultados salvos em: {results_path}")
 
 
