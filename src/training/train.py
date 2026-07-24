@@ -8,6 +8,7 @@ própria janela de entrada (``X -> X``).
 from __future__ import annotations
 
 import numpy as np
+from numpy.lib.stride_tricks import sliding_window_view
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
@@ -21,7 +22,6 @@ def build_dataloader(
     window_size: int = config.WINDOW_SIZE,
     batch_size: int = config.BATCH_SIZE,
     shuffle: bool = True,
-    device: str = config.DEVICE,
 ) -> DataLoader:
     """Cria um ``DataLoader`` de janelas deslizantes para reconstrução.
 
@@ -36,13 +36,11 @@ def build_dataloader(
         batch_size: Tamanho do lote.
         shuffle: Embaralhar as janelas (``True`` no treino, ``False`` em
             validação/teste para preservar a ordem temporal).
-        device: Device de execução usado depois nos laços.
 
     Returns:
         ``DataLoader`` cujos lotes são pares ``(janela, janela)`` de shape
         ``(batch, window_size, n_features)``, em ``float32``.
     """
-    _ = device
     X_array = np.asarray(X, dtype=np.float32)
 
     if X_array.ndim != 2:
@@ -58,11 +56,9 @@ def build_dataloader(
     if not np.isfinite(X_array).all():
         raise ValueError("X deve conter apenas valores finitos")
 
-    number_of_windows = X_array.shape[0] - window_size + 1
-    windows = np.stack(
-        [X_array[index : index + window_size] for index in range(number_of_windows)]
-    )
-    windows_tensor = torch.from_numpy(windows).to(dtype=torch.float32)
+    windows = sliding_window_view(X_array, window_shape=window_size, axis=0)
+    windows = np.moveaxis(windows, -1, 1)
+    windows_tensor = torch.from_numpy(np.ascontiguousarray(windows)).to(dtype=torch.float32)
     dataset = TensorDataset(windows_tensor, windows_tensor)
 
     return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
@@ -74,6 +70,7 @@ def train_one_epoch(
     optimizer: torch.optim.Optimizer,
     loss_fn: nn.Module,
     device: str = config.DEVICE,
+    max_grad_norm: float = config.MAX_GRAD_NORM,
 ) -> float:
     """Executa uma época de treino.
 
@@ -83,6 +80,7 @@ def train_one_epoch(
         optimizer: Otimizador (ex.: ``torch.optim.Adam``).
         loss_fn: Função de perda de reconstrução (ex.: ``nn.MSELoss``).
         device: Device de execução.
+        max_grad_norm: Norma maxima para gradient clipping.
 
     Returns:
         Perda média de reconstrução sobre a época.
@@ -102,6 +100,7 @@ def train_one_epoch(
         outputs = model(inputs)
         loss = loss_fn(outputs, targets)
         loss.backward()
+        torch.nn.utils.clip_grad_norm(model.parameters(), max_norm=max_grad_norm)
         optimizer.step()
 
         total_loss += loss.item() * batch_size_atual
@@ -165,22 +164,28 @@ def train_model(
     learning_rate: float = config.LEARNING_RATE,
     window_size: int = config.WINDOW_SIZE,
     device: str = config.DEVICE,
+    patience: int = config.EARLY_STOPPING_PATTIENCE,
+    scheduler_factor: float = config.SCHEDULER_FACTOR,
+    scheduler_patience: int = config.SCHEDULER_PATIENCE,
 ) -> dict[str, list[float]]:
     """Executa o laço completo de treino/validação do autoencoder.
 
     Monta os ``DataLoader`` de treino e validação, o otimizador e a perda,
     itera por ``epochs`` épocas e imprime o erro de treino e de validação a
-    cada época.
+    cada época. Inclui early stopping e learning rate scheduling.
 
     Args:
         model: Autoencoder criado por ``create_model``.
         X_train: Matriz de treino padronizada.
         X_val: Matriz de validação padronizada (estatísticas do treino).
-        epochs: Número de épocas.
+        epochs: Número maximo de épocas.
         batch_size: Tamanho do lote.
         learning_rate: Taxa de aprendizado do otimizador.
         window_size: Tamanho da janela temporal.
         device: Device de execução.
+        patience: Epocas sem melhoras antes de early stopping.
+        scheduler_factor: Fator de reducao do LR no scheduler.
+        scheduler_patience: Epocas sem melhora antes de reduzir o LR.
 
     Returns:
         Histórico das perdas: ``{"train_loss": [...], "val_loss": [...]}`` com
@@ -199,22 +204,27 @@ def train_model(
         window_size=window_size,
         batch_size=batch_size,
         shuffle=True,
-        device=device,
     )
     val_loader = build_dataloader(
         X_val,
         window_size=window_size,
         batch_size=batch_size,
         shuffle=False,
-        device=device,
     )
 
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    scheduler = torch.optim.lr_cheduler.ReduceLROnPlateau(
+        optimizer, mode="min", factor=scheduler_factor, patience=scheduler_patience
+    )
     loss_fn = nn.MSELoss()
     history: dict[str, list[float]] = {
         "train_loss": [],
         "val_loss": [],
     }
+
+    best_val_loss = float("inf")
+    patience_counter = 0
+    best_state = model.state_dict()
 
     for epoch in range(1, epochs + 1):
         train_loss = train_one_epoch(
@@ -225,6 +235,7 @@ def train_model(
             device=device,
         )
         val_loss = evaluate_loss(model, val_loader, loss_fn, device=device)
+        scheduler.step(val_loss)
 
         history["train_loss"].append(train_loss)
         history["val_loss"].append(val_loss)
@@ -234,5 +245,16 @@ def train_model(
             f"Erro de treino: {train_loss:.6f} | "
             f"Erro de validação: {val_loss:.6f}"
         )
+
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            patience_counter = 0
+            best_state = model.state_dict()
+        else:
+            patience_counter += 1
+            if patience_counter >= patience:
+                print(f"Early stopping na epoca {epoch} (sem melhora por {patience} epocas)")
+                model.load_state_dict(best_state)
+                break
 
     return history
