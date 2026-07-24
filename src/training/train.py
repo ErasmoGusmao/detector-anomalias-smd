@@ -164,7 +164,7 @@ def train_model(
     learning_rate: float = config.LEARNING_RATE,
     window_size: int = config.WINDOW_SIZE,
     device: str = config.DEVICE,
-    patience: int = config.EARLY_STOPPING_PATTIENCE,
+    patience: int = config.EARLY_STOPPING_PATIENCE,
     scheduler_factor: float = config.SCHEDULER_FACTOR,
     scheduler_patience: int = config.SCHEDULER_PATIENCE,
 ) -> dict[str, list[float]]:
