@@ -86,8 +86,8 @@ def main() -> None:
     # Persistencia do historico de treino (erro por epoca)
     config.MODEL_DIR.mkdir(parents=True, exist_ok=True)
     history_path = config.MODEL_DIR / "training_history.json"
-    with open(history, "w") as f:
-        json.dump(history_path, f, indent=2)
+    with open(history_path, "w") as f:
+        json.dump(history, f, indent=2)
     print(f"Historico de treino salvo em: {history_path}")
     
 
