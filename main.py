@@ -87,7 +87,7 @@ def main() -> None:
     config.MODEL_DIR.mkdir(parents=True, exist_ok=True)
     history_path = config.MODEL_DIR / "training_history.json"
     with open(history, "w") as f:
-        json.dump(history, f, indent=2)
+        json.dump(history_path, f, indent=2)
     print(f"Historico de treino salvo em: {history_path}")
     
 
