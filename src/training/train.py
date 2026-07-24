@@ -100,7 +100,7 @@ def train_one_epoch(
         outputs = model(inputs)
         loss = loss_fn(outputs, targets)
         loss.backward()
-        torch.nn.utils.clip_grad_norm(model.parameters(), max_norm=max_grad_norm)
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=max_grad_norm)
         optimizer.step()
 
         total_loss += loss.item() * batch_size_atual
