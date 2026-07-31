@@ -7,6 +7,8 @@ própria janela de entrada (``X -> X``).
 
 from __future__ import annotations
 
+import copy
+
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 import torch
@@ -224,7 +226,7 @@ def train_model(
 
     best_val_loss = float("inf")
     patience_counter = 0
-    best_state = model.state_dict()
+    best_state = copy.deepcopy(model.state_dict())
 
     for epoch in range(1, epochs + 1):
         train_loss = train_one_epoch(
@@ -249,12 +251,14 @@ def train_model(
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             patience_counter = 0
-            best_state = model.state_dict()
+            best_state = copy.deepcopy(model.state_dict())
         else:
             patience_counter += 1
             if patience_counter >= patience:
                 print(f"Early stopping na epoca {epoch} (sem melhora por {patience} epocas)")
-                model.load_state_dict(best_state)
                 break
+
+    # Restaura os pesos da melhor epoca (menor erro de validacao)
+    model.load_state_dict(best_state)
 
     return history
