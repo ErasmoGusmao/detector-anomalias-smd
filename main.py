@@ -92,6 +92,11 @@ def main() -> None:
     
 
     # Erro de reconstrução no teste (requisito: imprimir o erro de teste).
+    # Nota: este erro é a MSE da JANELA INTEIRA (todos os timesteps), base
+    # distinta do erro por-último-timestep usado no limiar/predição adiante.
+    # Sobre o teste do SMD (padronizado com as estatísticas do treino), ele
+    # pode ficar ordens de magnitude acima do erro de treino/validação, pois
+    # janelas anômalas geram z-scores altos — comportamento esperado do método.
     test_loader = build_dataloader(X_test, shuffle=False)
     test_loss = evaluate_loss(model, test_loader, nn.MSELoss(), device=device)
     print(f"Erro de reconstrução no teste: {test_loss:.6f}")
