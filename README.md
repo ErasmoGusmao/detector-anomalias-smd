@@ -359,7 +359,7 @@ de entrada/saída.
 | `build_dataloader(X, window_size, batch_size, shuffle)` | Extrai janelas deslizantes de `X`, monta um `TensorDataset(janela, janela)` e devolve um `DataLoader` em `float32`. |
 | `train_one_epoch(model, loader, optimizer, loss_fn, device)` | Executa uma época de treino e devolve a perda média de reconstrução. |
 | `evaluate_loss(model, loader, loss_fn, device)` | Calcula a perda média de reconstrução sem atualizar pesos (usado em validação e teste). |
-| `train_model(model, X_train, X_val, epochs, batch_size, learning_rate, window_size, device)` | Laço completo de treino/validação: monta os DataLoaders, itera por `epochs` épocas imprimindo o erro de treino e validação a cada uma, aplica early stopping e learning rate scheduling, restaura os pesos da melhor epoca (menor erro de validacao) e devolve o histórico `{"train_loss": [...], "val_loss": [...]}`. |
+| `train_model(model, X_train, X_val, epochs, batch_size, learning_rate, window_size, device)` | Laço completo de treino/validação: monta os DataLoaders, itera por `epochs` épocas imprimindo o erro de treino e validação a cada uma, aplica early stopping e learning rate scheduling, restaura os pesos da melhor época (menor erro de validação) e devolve o histórico `{"train_loss": [...], "val_loss": [...]}`. |
 
 ### Avaliação — `src/evaluation/metrics.py`
 

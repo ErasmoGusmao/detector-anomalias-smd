@@ -38,6 +38,8 @@ data/ServerMachineDataset/interpretation_label/*
 *.pth
 *.pkl
 models_saved/
+# Artefatos gerados pela execução do pipeline (modelo, histórico e resultados).
+artifacts/
 
 # --- Notebooks ---
 .ipynb_checkpoints/

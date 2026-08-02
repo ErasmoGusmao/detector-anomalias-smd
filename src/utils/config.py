@@ -40,14 +40,14 @@ EPOCHS: int = 100
 BATCH_SIZE: int = 64
 LEARNING_RATE: float = 1e-3
 
-# Early stopping: interrompe o treino se a validacao nao melhorar por N epocas
+# Early stopping: interrompe o treino se a validação não melhorar por N épocas
 EARLY_STOPPING_PATIENCE: int = 10
 
 # Learning rate scheduler (ReduceLROnPlateau).
 SCHEDULER_FACTOR: float = 0.5
 SCHEDULER_PATIENCE: int = 5
 
-# Gradient clipping: norma maxima dos gradientes.
+# Gradient clipping: norma máxima dos gradientes.
 MAX_GRAD_NORM: float = 1.0
 
 # Arquitetura do autoencoder (dimensões do encoder; o decoder é espelhado).

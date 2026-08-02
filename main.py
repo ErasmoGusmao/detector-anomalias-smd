@@ -83,13 +83,12 @@ def main() -> None:
     model = create_model(input_dim=X_train.shape[1], device=device)
     history = train_model(model, X_train, X_val, device=device)
 
-    # Persistencia do historico de treino (erro por epoca)
+    # Persistência do histórico de treino (erro por época)
     config.MODEL_DIR.mkdir(parents=True, exist_ok=True)
     history_path = config.MODEL_DIR / "training_history.json"
-    with open(history_path, "w") as f:
+    with open(history_path, "w", encoding="utf-8") as f:
         json.dump(history, f, indent=2)
-    print(f"Historico de treino salvo em: {history_path}")
-    
+    print(f"Histórico de treino salvo em: {history_path}")
 
     # Erro de reconstrução no teste (requisito: imprimir o erro de teste).
     # Nota: este erro é a MSE da JANELA INTEIRA (todos os timesteps), base
@@ -121,14 +120,14 @@ def main() -> None:
     print(f"Limiar de anomalia (p{config.ANOMALY_PERCENTILE:g}): {threshold:.6f}")
     print(f"Métricas de detecção: {metrics}")
 
-    # Persistencia dos resultados de avaliacao
+    # Persistência dos resultados de avaliação
     results = {
         "test_loss": test_loss,
         "threshold": threshold,
         **metrics,
     }
     results_path = config.MODEL_DIR / "results.json"
-    with open(results_path, "w") as f:
+    with open(results_path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
     print(f"Resultados salvos em: {results_path}")
 

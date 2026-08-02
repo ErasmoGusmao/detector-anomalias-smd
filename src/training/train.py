@@ -82,7 +82,7 @@ def train_one_epoch(
         optimizer: Otimizador (ex.: ``torch.optim.Adam``).
         loss_fn: Função de perda de reconstrução (ex.: ``nn.MSELoss``).
         device: Device de execução.
-        max_grad_norm: Norma maxima para gradient clipping.
+        max_grad_norm: Norma máxima para gradient clipping.
 
     Returns:
         Perda média de reconstrução sobre a época.
@@ -180,14 +180,14 @@ def train_model(
         model: Autoencoder criado por ``create_model``.
         X_train: Matriz de treino padronizada.
         X_val: Matriz de validação padronizada (estatísticas do treino).
-        epochs: Número maximo de épocas.
+        epochs: Número máximo de épocas.
         batch_size: Tamanho do lote.
         learning_rate: Taxa de aprendizado do otimizador.
         window_size: Tamanho da janela temporal.
         device: Device de execução.
-        patience: Epocas sem melhoras antes de early stopping.
-        scheduler_factor: Fator de reducao do LR no scheduler.
-        scheduler_patience: Epocas sem melhora antes de reduzir o LR.
+        patience: Épocas sem melhora antes de early stopping.
+        scheduler_factor: Fator de redução do LR no scheduler.
+        scheduler_patience: Épocas sem melhora antes de reduzir o LR.
 
     Returns:
         Histórico das perdas: ``{"train_loss": [...], "val_loss": [...]}`` com
@@ -255,10 +255,10 @@ def train_model(
         else:
             patience_counter += 1
             if patience_counter >= patience:
-                print(f"Early stopping na epoca {epoch} (sem melhora por {patience} epocas)")
+                print(f"Early stopping na época {epoch} (sem melhora por {patience} épocas)")
                 break
 
-    # Restaura os pesos da melhor epoca (menor erro de validacao)
+    # Restaura os pesos da melhor época (menor erro de validação)
     model.load_state_dict(best_state)
 
     return history
