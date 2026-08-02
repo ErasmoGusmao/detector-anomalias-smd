@@ -81,7 +81,8 @@ def main() -> None:
 
     # Modelo e treino (imprime o erro de treino e de validação por época).
     model = create_model(input_dim=X_train.shape[1], device=device)
-    history = train_model(model, X_train, X_val, device=device)
+    resultado = train_model(model, X_train, X_val, device=device)
+    history = resultado.history
 
     # Persistência do histórico de treino (erro por época)
     config.MODEL_DIR.mkdir(parents=True, exist_ok=True)
@@ -120,10 +121,15 @@ def main() -> None:
     print(f"Limiar de anomalia (p{config.ANOMALY_PERCENTILE:g}): {threshold:.6f}")
     print(f"Métricas de detecção: {metrics}")
 
-    # Persistência dos resultados de avaliação
+    # Persistência dos resultados de avaliação. Registra também de qual época
+    # vieram os pesos avaliados: com early stopping o treino segue além da
+    # melhor época, então o modelo salvo não é o da última linha do log.
     results = {
         "test_loss": test_loss,
         "threshold": threshold,
+        "best_epoch": resultado.best_epoch,
+        "best_val_loss": resultado.best_val_loss,
+        "epochs_executed": len(history["val_loss"]),
         **metrics,
     }
     results_path = config.MODEL_DIR / "results.json"
