@@ -15,6 +15,7 @@ from __future__ import annotations
 import numpy as np
 import torch
 import torch.nn as nn
+from numpy.lib.stride_tricks import sliding_window_view
 
 from src.utils import config
 
@@ -193,13 +194,12 @@ def reconstruction_error(
     with torch.inference_mode():
         for batch_start in range(0, number_of_windows, batch_size):
             batch_end = min(batch_start + batch_size, number_of_windows)
-            windows = np.stack(
-                [
-                    X_array[index : index + window_size]
-                    for index in range(batch_start, batch_end)
-                ]
-            )
-            batch = torch.from_numpy(windows).to(target_device)
+            windows = sliding_window_view(X_array[batch_start : batch_end + window_size - 1],
+                                          window_shape=window_size,
+                                          axis=0,
+                                         )
+            windows = np.moveaxis(windows, -1, 1)
+            batch = torch.from_numpy(np.ascontiguousarray(windows)).to(target_device)
             reconstructed = model(batch)
             errors = torch.mean(
                 (reconstructed[:, -1, :] - batch[:, -1, :]) ** 2,

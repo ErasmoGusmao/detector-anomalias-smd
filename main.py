@@ -7,6 +7,7 @@ erro de reconstrução no teste, salvamento do modelo e avaliação das anomalia
 
 from __future__ import annotations
 
+import json
 import logging
 
 import numpy as np
@@ -80,7 +81,14 @@ def main() -> None:
 
     # Modelo e treino (imprime o erro de treino e de validação por época).
     model = create_model(input_dim=X_train.shape[1], device=device)
-    train_model(model, X_train, X_val, device=device)
+    history = train_model(model, X_train, X_val, device=device)
+
+    # Persistência do histórico de treino (erro por época)
+    config.MODEL_DIR.mkdir(parents=True, exist_ok=True)
+    history_path = config.MODEL_DIR / "training_history.json"
+    with open(history_path, "w", encoding="utf-8") as f:
+        json.dump(history, f, indent=2)
+    print(f"Histórico de treino salvo em: {history_path}")
 
     # Erro de reconstrução no teste (requisito: imprimir o erro de teste).
     # Nota: este erro é a MSE da JANELA INTEIRA (todos os timesteps), base
@@ -88,7 +96,7 @@ def main() -> None:
     # Sobre o teste do SMD (padronizado com as estatísticas do treino), ele
     # pode ficar ordens de magnitude acima do erro de treino/validação, pois
     # janelas anômalas geram z-scores altos — comportamento esperado do método.
-    test_loader = build_dataloader(X_test, shuffle=False, device=device)
+    test_loader = build_dataloader(X_test, shuffle=False)
     test_loss = evaluate_loss(model, test_loader, nn.MSELoss(), device=device)
     print(f"Erro de reconstrução no teste: {test_loss:.6f}")
 
@@ -111,6 +119,17 @@ def main() -> None:
     metrics = calculate_metrics(y_test_aligned, y_pred)
     print(f"Limiar de anomalia (p{config.ANOMALY_PERCENTILE:g}): {threshold:.6f}")
     print(f"Métricas de detecção: {metrics}")
+
+    # Persistência dos resultados de avaliação
+    results = {
+        "test_loss": test_loss,
+        "threshold": threshold,
+        **metrics,
+    }
+    results_path = config.MODEL_DIR / "results.json"
+    with open(results_path, "w", encoding="utf-8") as f:
+        json.dump(results, f, indent=2)
+    print(f"Resultados salvos em: {results_path}")
 
 
 if __name__ == "__main__":

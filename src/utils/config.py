@@ -33,20 +33,30 @@ RANDOM_SEED: int = 42
 DEVICE: str = "cpu"
 
 # Janela temporal deslizante (autoencoder sobre sequências do SMD).
-WINDOW_SIZE: int = 30
+WINDOW_SIZE: int = 50
 
 # Laço de treino.
-EPOCHS: int = 50
+EPOCHS: int = 100
 BATCH_SIZE: int = 64
 LEARNING_RATE: float = 1e-3
 
+# Early stopping: interrompe o treino se a validação não melhorar por N épocas
+EARLY_STOPPING_PATIENCE: int = 10
+
+# Learning rate scheduler (ReduceLROnPlateau).
+SCHEDULER_FACTOR: float = 0.5
+SCHEDULER_PATIENCE: int = 5
+
+# Gradient clipping: norma máxima dos gradientes.
+MAX_GRAD_NORM: float = 1.0
+
 # Arquitetura do autoencoder (dimensões do encoder; o decoder é espelhado).
-HIDDEN_DIMS: tuple[int, ...] = (32, 16)
-LATENT_DIM: int = 8
+HIDDEN_DIMS: tuple[int, ...] = (64, 32)
+LATENT_DIM: int = 16
 
 # Limiar de anomalia: percentil do erro de reconstrução do treino acima do
 # qual uma amostra é marcada como anômala.
-ANOMALY_PERCENTILE: float = 99.0
+ANOMALY_PERCENTILE: float = 99.5
 
 # Persistência do modelo treinado.
 MODEL_DIR: Path = BASE_DIR / "artifacts"
