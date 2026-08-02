@@ -8,6 +8,7 @@ própria janela de entrada (``X -> X``).
 from __future__ import annotations
 
 import copy
+from typing import NamedTuple
 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
@@ -17,6 +18,29 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from src.models.model import Autoencoder
 from src.utils import config
+
+
+class ResultadoTreino(NamedTuple):
+    """Resultado do laço de treino do autoencoder.
+
+    Além do histórico de perdas, carrega **de qual época vieram os pesos** com
+    que o modelo terminou. Com early stopping o treino segue além da melhor
+    época, então a última linha do log não identifica o modelo resultante —
+    quem for registrar ou reportar o resultado precisa dessa informação junto.
+
+    Attributes:
+        history: Perdas por época executada,
+            ``{"train_loss": [...], "val_loss": [...]}``.
+        best_epoch: Época de menor erro de validação, cujos pesos foram
+            restaurados no modelo. Vale ``0`` quando nenhuma época melhorou o
+            erro de validação (modelo sem treino efetivo).
+        best_val_loss: Menor erro de validação observado, ou ``None`` quando
+            nenhuma época melhorou.
+    """
+
+    history: dict[str, list[float]]
+    best_epoch: int
+    best_val_loss: float | None
 
 
 def build_dataloader(
@@ -169,7 +193,7 @@ def train_model(
     patience: int = config.EARLY_STOPPING_PATIENCE,
     scheduler_factor: float = config.SCHEDULER_FACTOR,
     scheduler_patience: int = config.SCHEDULER_PATIENCE,
-) -> dict[str, list[float]]:
+) -> ResultadoTreino:
     """Executa o laço completo de treino/validação do autoencoder.
 
     Monta os ``DataLoader`` de treino e validação, o otimizador e a perda,
@@ -190,8 +214,10 @@ def train_model(
         scheduler_patience: Épocas sem melhora antes de reduzir o LR.
 
     Returns:
-        Histórico das perdas: ``{"train_loss": [...], "val_loss": [...]}`` com
-        uma entrada por época.
+        ``ResultadoTreino`` com o histórico das perdas (uma entrada por época
+        **executada** — com early stopping ele pode ser mais curto que
+        ``epochs``), a melhor época e o menor erro de validação. Os pesos do
+        modelo ao final são os da melhor época, não os da última executada.
     """
     if epochs <= 0:
         raise ValueError("epochs deve ser maior que zero")
@@ -225,6 +251,7 @@ def train_model(
     }
 
     best_val_loss = float("inf")
+    best_epoch = 0
     patience_counter = 0
     best_state = copy.deepcopy(model.state_dict())
 
@@ -250,6 +277,7 @@ def train_model(
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
+            best_epoch = epoch
             patience_counter = 0
             best_state = copy.deepcopy(model.state_dict())
         else:
@@ -258,7 +286,25 @@ def train_model(
                 print(f"Early stopping na época {epoch} (sem melhora por {patience} épocas)")
                 break
 
-    # Restaura os pesos da melhor época (menor erro de validação)
+    # Restaura os pesos da melhor época (menor erro de validação). O laço pode
+    # ter seguido além dela, então o modelo devolvido não é necessariamente o da
+    # última época impressa acima — daí o aviso explícito de qual foi restaurada.
     model.load_state_dict(best_state)
 
-    return history
+    if best_epoch == 0:
+        print(
+            "Atenção: nenhuma época melhorou o erro de validação. O modelo "
+            "devolvido é o da inicialização, sem treino efetivo."
+        )
+        return ResultadoTreino(history=history, best_epoch=0, best_val_loss=None)
+
+    print(
+        f"Pesos restaurados da melhor época: {best_epoch:03d} "
+        f"(erro de validação: {best_val_loss:.6f})"
+    )
+
+    return ResultadoTreino(
+        history=history,
+        best_epoch=best_epoch,
+        best_val_loss=best_val_loss,
+    )

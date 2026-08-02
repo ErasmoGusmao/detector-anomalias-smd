@@ -308,6 +308,14 @@ treinado (`autoencoder.pt`), o histórico de treino/validação por época
 (`training_history.json`) e os resultados da avaliação (`results.json`). Assim como `data/`,
 ela é ignorada pelo `.gitignore` (`artifacts/`) — são artefatos gerados, não código-fonte.
 
+> ⚠️ **O modelo salvo não é necessariamente o da última época do log.** Com early
+> stopping, o treino continua rodando algumas épocas além da melhor antes de parar —
+> são os pesos da **melhor época** (menor erro de validação) que ficam gravados em
+> `autoencoder.pt`, não os da última linha impressa. Numa execução real, por exemplo, o
+> treino parou por early stopping na época 71 de 100, mas o modelo salvo é o da época 61
+> (erro de validação 0,189605). `results.json` registra essa informação em `best_epoch`
+> e `best_val_loss`, para que essa leitura não dependa de garimpar o log.
+
 ## Como executar
 
 ```bash
@@ -360,12 +368,25 @@ de entrada/saída.
 
 ### Treinamento — `src/training/train.py`
 
+O laço de treino devolve um `ResultadoTreino` (`NamedTuple`), não só o histórico de
+perdas. Isso existe porque o treino usa early stopping: os pesos finais do modelo são
+os da **melhor época** (menor erro de validação), mas o laço continua rodando algumas
+épocas depois dela até a paciência (`EARLY_STOPPING_PATIENCE`) se esgotar. Sem essa
+informação junto, quem lê apenas a última linha do log concluiria — errado — que o
+modelo salvo corresponde à última época impressa.
+
+| Campo de `ResultadoTreino` | Conteúdo |
+|-----------------------------|----------|
+| `history` | Perdas por época **executada**, `{"train_loss": [...], "val_loss": [...]}` (o que a função devolvia sozinho antes desta mudança). |
+| `best_epoch` | Época de menor erro de validação, de onde vieram os pesos restaurados no modelo. `0` quando nenhuma época melhorou o erro de validação. |
+| `best_val_loss` | Menor erro de validação observado, ou `None` no caso acima. |
+
 | Função | Responsabilidade |
 |--------|-----------------|
 | `build_dataloader(X, window_size, batch_size, shuffle)` | Extrai janelas deslizantes de `X`, monta um `TensorDataset(janela, janela)` e devolve um `DataLoader` em `float32`. |
 | `train_one_epoch(model, loader, optimizer, loss_fn, device, max_grad_norm)` | Executa uma época de treino (com gradient clipping) e devolve a perda média de reconstrução. |
 | `evaluate_loss(model, loader, loss_fn, device)` | Calcula a perda média de reconstrução sem atualizar pesos (usado em validação e teste). |
-| `train_model(model, X_train, X_val, epochs, batch_size, learning_rate, window_size, device, patience, scheduler_factor, scheduler_patience)` | Laço completo de treino/validação: monta os DataLoaders, itera por `epochs` épocas imprimindo o erro de treino e validação a cada uma, aplica early stopping e learning rate scheduling, restaura os pesos da melhor época (menor erro de validação) e devolve o histórico `{"train_loss": [...], "val_loss": [...]}`. |
+| `train_model(model, X_train, X_val, epochs, batch_size, learning_rate, window_size, device, patience, scheduler_factor, scheduler_patience)` | Laço completo de treino/validação: monta os DataLoaders, itera por `epochs` épocas imprimindo o erro de treino e validação a cada uma, aplica early stopping e learning rate scheduling, restaura os pesos da melhor época (menor erro de validação), imprime de qual época os pesos foram restaurados e devolve um `ResultadoTreino`. |
 
 ### Avaliação — `src/evaluation/metrics.py`
 
@@ -411,7 +432,7 @@ recebem como valores default de seus parâmetros, e podem ser sobrescritos por c
 
 | Função | Responsabilidade |
 |--------|-----------------|
-| `main()` | Orquestra o pipeline completo: carrega os três arquivos do SMD (`train`, `test`, `test_label`) → limpa com `clean_data`/`clean_aligned` → converte para NumPy → split treino/validação temporal → padroniza (fit no treino, transform no restante) → cria e treina o autoencoder imprimindo o erro de treino e validação por época → persiste o histórico de treino em `artifacts/training_history.json` → calcula e imprime o erro de reconstrução no teste → salva o modelo em disco → define o limiar pelo percentil dos erros de reconstrução do treino → prediz anomalias no teste → imprime as métricas finais (precision, recall, F1, accuracy) → persiste `test_loss`, `threshold` e as métricas em `artifacts/results.json`. |
+| `main()` | Orquestra o pipeline completo: carrega os três arquivos do SMD (`train`, `test`, `test_label`) → limpa com `clean_data`/`clean_aligned` → converte para NumPy → split treino/validação temporal → padroniza (fit no treino, transform no restante) → cria e treina o autoencoder imprimindo o erro de treino e validação por época → persiste o histórico de treino em `artifacts/training_history.json` → calcula e imprime o erro de reconstrução no teste → salva o modelo em disco → define o limiar pelo percentil dos erros de reconstrução do treino → prediz anomalias no teste → imprime as métricas finais (precision, recall, F1, accuracy) → persiste `test_loss`, `threshold`, `best_epoch`, `best_val_loss`, `epochs_executed` e as métricas em `artifacts/results.json`. |
 
 ## Status das etapas
 
