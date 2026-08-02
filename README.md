@@ -224,8 +224,8 @@ o treino (que é 100% normal). Janelas anômalas do teste produzem z-scores muit
 nessa escala, elevando o MSE da janela inteira. Isso é **comportamento esperado do
 método**, não um defeito do modelo ou do pipeline.
 
-**Sobre o limiar de anomalia (`ANOMALY_PERCENTILE = 99.0`):**
-o limiar é definido como o percentil 99 dos erros de reconstrução *do conjunto de treino*
+**Sobre o limiar de anomalia (`ANOMALY_PERCENTILE = 99.5`):**
+o limiar é definido como o percentil 99,5 dos erros de reconstrução *do conjunto de treino*
 (calculados por `reconstruction_error`, que usa apenas o último timestep de cada janela).
 Como o modelo foi treinado nesses mesmos dados, esses erros são otimisticamente baixos —
 escolha padrão e conhecida do método de detecção não-supervisionada por reconstrução.
@@ -273,24 +273,25 @@ data/
 
 ```
 .
-├── data/                  # base de dados - SMD
-├── notebooks/             # experimentos e exploracao
+├── artifacts/              # modelo treinado e resultados (gerados pela execução)
+├── data/                   # base de dados - SMD
+├── notebooks/              # experimentos e exploração
 ├── src/
 │   ├── data/
-│   │   └── loader.py      # carregamento e limpeza dos dados
+│   │   └── loader.py       # carregamento e limpeza dos dados
 │   ├── preprocessing/
-│   │   └── transform.py   # transformacoes e split dos dados
+│   │   └── transform.py    # transformações e split dos dados
 │   ├── models/
-│   │   ├── model.py       # definicao do autoencoder (PyTorch)
-│   │   └── persistence.py # salvamento e carregamento do modelo
+│   │   ├── model.py        # definição do autoencoder (PyTorch)
+│   │   └── persistence.py  # salvamento e carregamento do modelo
 │   ├── training/
-│   │   └── train.py       # rotina de treinamento
+│   │   └── train.py        # rotina de treinamento
 │   ├── evaluation/
-│   │   └── metrics.py     # metricas de avaliacao
+│   │   └── metrics.py      # métricas de avaliação
 │   └── utils/
-│       ├── config.py      # configuracoes do pipeline
-│       └── torch_utils.py # device e reprodutibilidade (PyTorch)
-├── main.py                # ponto de entrada do pipeline
+│       ├── config.py       # configurações do pipeline
+│       └── torch_utils.py  # device e reprodutibilidade (PyTorch)
+├── main.py                 # ponto de entrada do pipeline
 ├── requirements.txt
 └── README.md
 ```
@@ -301,6 +302,11 @@ em todas as funções. O pipeline está completamente implementado: carregamento
 laço de treino (`train.py`), persistência do modelo (`persistence.py`) e avaliação com
 limiar e binarização (`metrics.py`) — todos os módulos funcionais.
 Os testes automatizados (unittest) entram na Entrega 4.
+
+A pasta `artifacts/` é criada automaticamente pela execução do `main.py` e recebe o modelo
+treinado (`autoencoder.pt`), o histórico de treino/validação por época
+(`training_history.json`) e os resultados da avaliação (`results.json`). Assim como `data/`,
+ela é ignorada pelo `.gitignore` (`artifacts/`) — são artefatos gerados, não código-fonte.
 
 ## Como executar
 
@@ -357,9 +363,9 @@ de entrada/saída.
 | Função | Responsabilidade |
 |--------|-----------------|
 | `build_dataloader(X, window_size, batch_size, shuffle)` | Extrai janelas deslizantes de `X`, monta um `TensorDataset(janela, janela)` e devolve um `DataLoader` em `float32`. |
-| `train_one_epoch(model, loader, optimizer, loss_fn, device)` | Executa uma época de treino e devolve a perda média de reconstrução. |
+| `train_one_epoch(model, loader, optimizer, loss_fn, device, max_grad_norm)` | Executa uma época de treino (com gradient clipping) e devolve a perda média de reconstrução. |
 | `evaluate_loss(model, loader, loss_fn, device)` | Calcula a perda média de reconstrução sem atualizar pesos (usado em validação e teste). |
-| `train_model(model, X_train, X_val, epochs, batch_size, learning_rate, window_size, device)` | Laço completo de treino/validação: monta os DataLoaders, itera por `epochs` épocas imprimindo o erro de treino e validação a cada uma, aplica early stopping e learning rate scheduling, restaura os pesos da melhor época (menor erro de validação) e devolve o histórico `{"train_loss": [...], "val_loss": [...]}`. |
+| `train_model(model, X_train, X_val, epochs, batch_size, learning_rate, window_size, device, patience, scheduler_factor, scheduler_patience)` | Laço completo de treino/validação: monta os DataLoaders, itera por `epochs` épocas imprimindo o erro de treino e validação a cada uma, aplica early stopping e learning rate scheduling, restaura os pesos da melhor época (menor erro de validação) e devolve o histórico `{"train_loss": [...], "val_loss": [...]}`. |
 
 ### Avaliação — `src/evaluation/metrics.py`
 
@@ -380,11 +386,32 @@ de entrada/saída.
 | `get_device(prefer_cuda, prefer_mps)` | Resolve o device de execução: retorna `"cuda"` ou `"mps"` quando solicitado e disponível; caso contrário, `"cpu"`. |
 | `set_seed(seed)` | Fixa as sementes de `random`, NumPy e PyTorch (incluindo CUDA) para reprodutibilidade. |
 
+### Configuração — `src/utils/config.py`
+
+Reúne, num só lugar, os hiperparâmetros e caminhos usados pelo pipeline (os módulos os
+recebem como valores default de seus parâmetros, e podem ser sobrescritos por chamada).
+
+| Parâmetro | Valor atual | Descrição |
+|-----------|-------------|-----------|
+| `WINDOW_SIZE` | `50` | Tamanho da janela temporal deslizante do autoencoder. |
+| `EPOCHS` | `100` | Número máximo de épocas de treino. |
+| `BATCH_SIZE` | `64` | Tamanho do lote nos `DataLoader`. |
+| `LEARNING_RATE` | `1e-3` | Taxa de aprendizado inicial do otimizador Adam. |
+| `EARLY_STOPPING_PATIENCE` | `10` | Épocas sem melhora na validação antes de interromper o treino. |
+| `SCHEDULER_FACTOR` | `0.5` | Fator de redução do learning rate no `ReduceLROnPlateau`. |
+| `SCHEDULER_PATIENCE` | `5` | Épocas sem melhora antes de reduzir o learning rate. |
+| `MAX_GRAD_NORM` | `1.0` | Norma máxima dos gradientes (gradient clipping). |
+| `HIDDEN_DIMS` | `(64, 32)` | Dimensões das camadas do encoder (o decoder é espelhado). |
+| `LATENT_DIM` | `16` | Dimensão do espaço latente do autoencoder. |
+| `ANOMALY_PERCENTILE` | `99.5` | Percentil do erro de reconstrução do treino usado como limiar de anomalia. |
+| `RANDOM_SEED` | `42` | Semente fixa para reprodutibilidade. |
+| `DEVICE` | `"cpu"` | Device de execução padrão. |
+
 ### Orquestração — `main.py`
 
 | Função | Responsabilidade |
 |--------|-----------------|
-| `main()` | Orquestra o pipeline completo: carrega os três arquivos do SMD (`train`, `test`, `test_label`) → limpa com `clean_data`/`clean_aligned` → converte para NumPy → split treino/validação temporal → padroniza (fit no treino, transform no restante) → cria e treina o autoencoder imprimindo o erro de treino e validação por época → calcula e imprime o erro de reconstrução no teste → salva o modelo em disco → define o limiar pelo percentil dos erros de reconstrução do treino → prediz anomalias no teste → imprime as métricas finais (precision, recall, F1, accuracy). |
+| `main()` | Orquestra o pipeline completo: carrega os três arquivos do SMD (`train`, `test`, `test_label`) → limpa com `clean_data`/`clean_aligned` → converte para NumPy → split treino/validação temporal → padroniza (fit no treino, transform no restante) → cria e treina o autoencoder imprimindo o erro de treino e validação por época → persiste o histórico de treino em `artifacts/training_history.json` → calcula e imprime o erro de reconstrução no teste → salva o modelo em disco → define o limiar pelo percentil dos erros de reconstrução do treino → prediz anomalias no teste → imprime as métricas finais (precision, recall, F1, accuracy) → persiste `test_loss`, `threshold` e as métricas em `artifacts/results.json`. |
 
 ## Status das etapas
 
@@ -410,9 +437,12 @@ de entrada/saída.
 > (`build_dataloader`, `train_one_epoch`, `evaluate_loss`, `train_model`), persistência
 > do modelo (`save_model`/`load_model` em `src/models/persistence.py`) e binarização
 > por erro de reconstrução (`reconstruction_threshold`/`predict_anomalies` em
-> `src/evaluation/metrics.py`) — todos implementados. O `python main.py` executa o
-> pipeline de ponta a ponta, imprime erros de treino/validação por época, erro de
-> reconstrução no teste e as métricas finais (precision, recall, F1, accuracy).
+> `src/evaluation/metrics.py`) — todos implementados. O laço de treino conta ainda com
+> early stopping, learning rate scheduler (`ReduceLROnPlateau`) e gradient clipping. O
+> `python main.py` executa o pipeline de ponta a ponta, imprime erros de treino/validação
+> por época, erro de reconstrução no teste e as métricas finais (precision, recall, F1,
+> accuracy), e persiste em `artifacts/` o modelo treinado, o histórico de treino
+> (`training_history.json`) e os resultados da avaliação (`results.json`).
 
 ## Equipe
 
