@@ -3,7 +3,7 @@
 Verifica que o pipeline de leitura carrega corretamente os arquivos, produz data frames com o formato esperado e trata erros de caminho inexistente."""
 
 import unittest
-forma pathlib import Path
+from pathlib import Path
 
 import pandas as pd
 
@@ -11,7 +11,7 @@ from src.data.loader import load_data, clean_data
 from src.utils import config
 
 class TestDataLoading(unittest.TestCase):
-    """Testes de carregamento dos dados do SMD."""
+    """Testes de carregamento dos dados."""
 
     def test_load_data_returns_dataframe(self):
         """Verifica que load_data retorna um DataFrame não vazio com 38 colunas."""
@@ -20,7 +20,7 @@ class TestDataLoading(unittest.TestCase):
         self.assertGreater(len(df), 0, "DataFrame não deve estar vazio.")
         self.assertEqual(df.shape[1], 38, "SMD deve conter 38 features (colunas).")
 
-    def test_load_data_filw_not_found(self):
+    def test_load_data_file_not_found(self):
         """Verifica que load_data levanta FileNotFoundError para caminho inexistente."""
         with self.assertRaises(FileNotFoundError):
             load_data(Path("caminho/inexistente/arquivo.txt"))
