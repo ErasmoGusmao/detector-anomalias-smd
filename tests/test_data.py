@@ -1,6 +1,6 @@
 """Testes unitários para o módulo de carregamento de dados (src/data/loader.py).
 
-Verifica que o pipeline de leitura carrega corretamente os arquivos, produz data frames com o formato esperado e trata erros de caminho inexistente."""
+   Verifica que o pipeline de leitura carrega corretamente os arquivos, produz data frames com o formato esperado e trata erros de caminho inexistente."""
 
 import unittest
 from pathlib import Path
@@ -13,12 +13,12 @@ from src.utils import config
 class TestDataLoading(unittest.TestCase):
  """Testes de carregamento dos dados."""
 
- def test_load_data_returns_dataframe(self):
- """Verifica que load_data retorna um DataFrame não vazio com 38 colunas."""
- df = load_data(config.TRAIN_PATH)
- self.assertIsInstance(df, pd.DataFrame)
- self.assertGreater(len(df), 0, "DataFrame não deve estar vazio.")
- self.assertEqual(df.shape[1], 38, "SMD deve conter 38 features (colunas).")
+    def test_load_data_returns_dataframe(self):
+        """Verifica que load_data retorna um DataFrame não vazio com 38 colunas."""
+        df = load_data(config.TRAIN_PATH)
+        self.assertIsInstance(df, pd.DataFrame)
+        self.assertGreater(len(df), 0, "DataFrame não deve estar vazio.")
+       self.assertEqual(df.shape[1], 38, "SMD deve conter 38 features (colunas).")
 
  def test_load_data_file_not_found(self):
  """Verifica que load_data levanta FileNotFoundError para caminho inexistente."""
