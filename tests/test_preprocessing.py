@@ -10,6 +10,7 @@ class TestPreprocessing(unittest.TestCase):
     """Testes de pre-processamento dos dados."""
 
     def setUp(self):
+        """Cria dados sintéticos para os testes."""
         np.random.seed(42)
         self.X = np.random.randn(200,38).astype(np.float64)
         self.X = self.X * 5 + 10 # média 10, std 5
