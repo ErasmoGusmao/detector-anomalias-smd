@@ -1,6 +1,6 @@
 """Testes unitários para o módulo de treinamento (src/training/traindo.py).
 
-   Verifica que build_dataloader gera tensões no formato correto (float32, shape com janela temporal)."""
+   Verifica que build_dataloader gera tensores no formato correto (float32, shape com janela temporal)."""
 
 import unittest
 
