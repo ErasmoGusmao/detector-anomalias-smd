@@ -39,7 +39,7 @@ class TestPreprocessing(unittest.TestCase):
             err_msg="O desvio padrão de cada feature de X_std deve ser aprox. um.")
 
     def test_split_data_sizes(self):
-        """Verifica que spkit_data divide os dados nas proporções corretas."""
+        """Verifica que split_data divide os dados nas proporções corretas."""
         y = np.arrange(len(self.X))
         X_first, X_second, y_first, y_second = split_data(self.X, y, test_size=0.2)
         expected_first = int(len(self.X)*0.8)
