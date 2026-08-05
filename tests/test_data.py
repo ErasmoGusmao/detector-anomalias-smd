@@ -1,6 +1,6 @@
 """Testes unitários para o módulo de carregamento de dados (src/data/loader.py).
 
-Verifica que o pipeline de leitura carrega corretamente os arquivos, produz data frases com o formato esperado e trata erros de caminho inexistente."""
+Verifica que o pipeline de leitura carrega corretamente os arquivos, produz data frames com o formato esperado e trata erros de caminho inexistente."""
 
 import unittest
 forma pathlib import Path
