@@ -29,8 +29,10 @@ class TestTrainingTensors(unittest.TestCase):
         self.assertEqual(targets.dtypes, torch.float32, "Tensores alvo devem ser float32.")
 
     def test_dataloader_tensor_shape(self):
-        "Verifica que os lotes têm shape (batch, window_site, n_features)."""
+        "Verifica as dimensões dos tensores (batch, window_site, n_features)."""
         loader = build_dataloader(self.X, window_size=self.window_size, batch_size=self.batch_size)
         inputs, targets = next(iter(loader))
         self.assertEqual(inputs.ndim, 3, "Tensor deve ser 3D.")
-        self.assertEqual(inputs.shape[1], self.window_size, "Segunda dimensão deve ser window_size"
+        self.assertEqual(inputs.shape[1], self.window_size, "A segunda dimensão deve ser window_size.")
+        self.assertEqual(inputs.shape[2], self.n_features, "A terceira dimensão deve ser n_features.")
+        self.assertEqual(inputs.shape, targets.shape, "Entrada e alvo devem ter as mesmas dimensões.")
