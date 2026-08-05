@@ -445,7 +445,7 @@ recebem como valores default de seus parâmetros, e podem ser sobrescritos por c
 | 1 | Tipagem (type hints) | ✅ Concluído |
 | 2 | Uso adequado de NumPy | ✅ Concluído |
 | 3 | Implementação em PyTorch (partes 1 e 2) | ✅ Concluído |
-| 4 | Testes automatizados (unittest) | ⬜ Pendente |
+| 4 | Testes automatizados (unittest) | ✅ Concluído |
 | 5 | Requisitos | ⬜ Pendente |
 | 6 | Design/arquitetura + Git e colaboração | ⬜ Pendente |
 | Final | Apresentação | ⬜ Pendente |
@@ -464,6 +464,15 @@ recebem como valores default de seus parâmetros, e podem ser sobrescritos por c
 > por época, erro de reconstrução no teste e as métricas finais (precision, recall, F1,
 > accuracy), e persiste em `artifacts/` o modelo treinado, o histórico de treino
 > (`training_history.json`) e os resultados da avaliação (`results.json`).
+
+## Testes automatizados
+
+Os testes unitários utilizam o módulo 'unittest' da biblioteca padrão e estão organizados em quatro arquivos na pasta 'tests/'.
+
+### Estrutura dos testes
+
+"""
+
 
 ## Equipe
 
