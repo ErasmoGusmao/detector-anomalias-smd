@@ -471,7 +471,32 @@ Os testes unitários utilizam o módulo 'unittest' da biblioteca padrão e estã
 
 ### Estrutura dos testes
 
-"""
+```
+tests/
+├── __init__.py
+├── test_data.py # carregamento e limpeza dos dados
+├── test_preprocessing.py # transformações de pré-processamento
+├── test_model.py # saída, salvamento e carregamento do modelo
+└── test_training.py # formato dos tensores (DataLoader)
+```
+
+### Descrição dos testes
+
+| Arquivo | Classe | Método | O que verifica |
+|---------|--------|--------|----------------|
+| `test_data.py` | `TestDataLoading` | `test_load_data_returns_dataframe` | `load_data` retorna um DataFrame não vazio com 38 colunas (formato esperado do SMD). |
+| `test_data.py` | `TestDataLoading` | `test_load_data_file_not_found` | `load_data` levanta `FileNotFoundError` para caminho inexistente. |
+| `test_data.py` | `TestDataLoading` | `test_clean_data_removes_nan` | `clean_data` remove linhas com NaN e preserva o número de colunas. |
+| `test_preprocessing.py` | `TestPreprocessing` | `test_standardize_shape` | `standardize` preserva o shape da matriz e retorna `mean`/`std` com dimensão correta. |
+| `test_preprocessing.py` | `TestPreprocessing` | `test_standardize_mean` | Após padronização, a média por feature é ≈ 0. |
+| `test_preprocessing.py` | `TestPreprocessing` | `test_standardize_std` | Após padronização, o desvio-padrão por feature é ≈ 1. |
+| `test_preprocessing.py` | `TestPreprocessing` | `test_split_data_sizes` | `split_data` divide os dados nas proporções corretas (80/20). |
+| `test_training.py` | `TestTrainingTensors` | `test_dataloader_tensor_dtype` | Tensores produzidos por `build_dataloader` são `float32`. |
+| `test_training.py` | `TestTrainingTensors` | `test_dataloader_tensor_shape` | Lotes têm shape `(batch, window_size, n_features)` e entrada = alvo. |
+| `test_model.py` | `TestModelOutput` | `test_model_output_shape` | Saída do autoencoder tem o mesmo shape da entrada (reconstrução). |
+| `test_model.py` | `TestModelOutput` | `test_model_output_is_finite` | Saída do modelo não contém NaN ou Inf. |
+| `test_model.py` | `TestModelSaving` | `test_save_model_creates_file` | `save_model` cria o arquivo `.pt` em disco e o arquivo não está vazio. |
+| `test_model.py` | `TestModelLoading` | `test_load_model_restores_weights` | `load_model` restaura pesos idênticos aos do modelo salvo originalmente. |
 
 
 ## Equipe
