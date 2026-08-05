@@ -17,7 +17,7 @@ class TestDataLoading(unittest.TestCase):
         df = load_data(config.TRAIN_PATH)
         self.assertIsInstance(df, pd.DataFrame)
         self.assertGreater(len(df), 0, "DataFrame não deve estar vazio.")
-       self.assertEqual(df.shape[1], 38, "SMD deve conter 38 features (colunas).")
+        self.assertEqual(df.shape[1], 38, "SMD deve conter 38 features (colunas).")
 
     def test_load_data_file_not_found(self):
         """Verifica que load_data levanta FileNotFoundError para caminho inexistente."""
