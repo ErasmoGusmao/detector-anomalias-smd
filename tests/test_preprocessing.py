@@ -4,7 +4,7 @@ Verifica que as transformações de padronização (z-score) produzem saídas co
 
 import unittest
 import numpy as np
-from src.preprocessing.transform import standards, split_data
+from src.preprocessing.transform import standardize, split_data
 
 class TestPreprocessing(unittest.TestCase):
     """Testes de pre-processamento dos dados."""
