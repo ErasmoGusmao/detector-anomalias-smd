@@ -474,10 +474,10 @@ Os testes unitários utilizam o módulo 'unittest' da biblioteca padrão e estã
 ```
 tests/
 ├── __init__.py
-├── test_data.py # carregamento e limpeza dos dados
+├── test_data.py.         # carregamento e limpeza dos dados
 ├── test_preprocessing.py # transformações de pré-processamento
-├── test_model.py # saída, salvamento e carregamento do modelo
-└── test_training.py # formato dos tensores (DataLoader)
+├── test_model.py.        # saída, salvamento e carregamento do modelo
+└── test_training.py.     # formato dos tensores (DataLoader)
 ```
 
 ### Descrição dos testes
