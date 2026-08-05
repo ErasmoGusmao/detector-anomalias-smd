@@ -40,4 +40,12 @@ class TestPreprocessing(unittest.TestCase):
     def test_split_data_sizes(self):
         """Verifica que spkit_data divide os dados nas proporções corretas."""
         y = np.arrange(len(self.X))
-        X_firme, X_second y_first, y_second
+        X_first, X_second, y_first, y_second = split_data(self.X, y, test_size=0.2)
+        expected_first = int(len(self.X)*0.8)
+        self.assertEqual(len(X_first), expected_first)
+        self.assertEqual(len(X_second), len(self.X) - expected_first)
+        self.assertEqual(len(y_first), expe ted_first)
+        self.assertEqual(len(y_second), len(self.X) - expected_first)
+        
+if __name__ == "__main__":
+    unittest.main()
