@@ -19,8 +19,8 @@ class TestPreprocessing(unittest.TestCase):
         """Verifica que standardize preserva as dimensoes originais da matriz."""
         X_std, mean, std = standardize(self.X)
         self.assertEqual(X_std.shape, self.X.shape,"As dimensoes de X e X_std devem ser iguais.")
-        self.assertEqual(mean.shape, (38, ), "Devem haver uma média por feature.")
-        self assertEqual(std.shape, (38,), "Devem haver um desvio padrão por feature.")
+        self.assertEqual(mean.shape, (38, ), "Deve haver uma média por feature.")
+        self assertEqual(std.shape, (38,), "Deve haver um desvio padrão por feature.")
 
     def test_standardize_mean(self):
         """Verifica que a média das features padronizadas é aproximadamente zero."
