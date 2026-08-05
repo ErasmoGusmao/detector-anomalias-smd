@@ -24,7 +24,7 @@ class TestTrainingTensors(unittest.TestCase):
     def test_dataloader_tensor_dtype(self):
         """Verifica que os tensores do DataLoader são float32."""
         loader = build_dataloader(self.X, window_size=self.window_size, batch_size=self.batch_size)
-        inputs, tarjeta = next(iter(loader))
+        inputs, targets = next(iter(loader))
         self.assertEqual(inputs.dtype, torch.float32, "Tensores de entrada devem ser float32.")
         self.assertEqual(targets.dtypes, torch.float32, "Tensores alvo devem ser float32.")
 
