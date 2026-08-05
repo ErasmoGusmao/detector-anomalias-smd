@@ -36,3 +36,6 @@ class TestTrainingTensors(unittest.TestCase):
         self.assertEqual(inputs.shape[1], self.window_size, "A segunda dimensão deve ser window_size.")
         self.assertEqual(inputs.shape[2], self.n_features, "A terceira dimensão deve ser n_features.")
         self.assertEqual(inputs.shape, targets.shape, "Entrada e alvo devem ter as mesmas dimensões.")
+
+if __name__ == "__main__":
+    unittest.main()
