@@ -28,7 +28,7 @@ class TestPreprocessing(unittest.TestCase):
         feature_means = np.mean(X_std, axis=0)
         np.testing.assert_allclose(
             feature_means, np.zeros(38), atol=1e-10,
-            err_msg = "A média por feature de X_std deve ser aprox. zero.")
+            err_msg = "A média de cada feature de X_std deve ser aprox. zero.")
 
     def test_standardize_std(self):
         "Verifica que o desvio padrão das features de X_std é aprox. um."""
