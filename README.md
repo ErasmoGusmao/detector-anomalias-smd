@@ -275,6 +275,8 @@ data/
 .
 ├── artifacts/              # modelo treinado e resultados (gerados pela execução)
 ├── data/                   # base de dados - SMD
+├── docs/
+│   └── requisitos/         # requisitos do sistema (uma visão por arquivo)
 ├── notebooks/              # experimentos e exploração
 ├── src/
 │   ├── data/
@@ -291,6 +293,7 @@ data/
 │   └── utils/
 │       ├── config.py       # configurações do pipeline
 │       └── torch_utils.py  # device e reprodutibilidade (PyTorch)
+├── tests/                  # testes automatizados (unittest)
 ├── main.py                 # ponto de entrada do pipeline
 ├── requirements.txt
 └── README.md
@@ -445,8 +448,7 @@ recebem como valores default de seus parâmetros, e podem ser sobrescritos por c
 | 1 | Tipagem (type hints) | ✅ Concluído |
 | 2 | Uso adequado de NumPy | ✅ Concluído |
 | 3 | Implementação em PyTorch (partes 1 e 2) | ✅ Concluído |
-| 4 | Testes automatizados (unittest) | ⬜ Pendente |
-| 5 | Requisitos | ⬜ Pendente |
+| 4 | Testes automatizados (unittest) + requisitos | 🔄 Em andamento |
 | 6 | Design/arquitetura + Git e colaboração | ⬜ Pendente |
 | Final | Apresentação | ⬜ Pendente |
 
