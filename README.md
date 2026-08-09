@@ -275,6 +275,8 @@ data/
 .
 ├── artifacts/              # modelo treinado e resultados (gerados pela execução)
 ├── data/                   # base de dados - SMD
+├── docs/
+│   └── requisitos/         # requisitos do sistema (uma visão por arquivo)
 ├── notebooks/              # experimentos e exploração
 ├── src/
 │   ├── data/
@@ -291,6 +293,7 @@ data/
 │   └── utils/
 │       ├── config.py       # configurações do pipeline
 │       └── torch_utils.py  # device e reprodutibilidade (PyTorch)
+├── tests/                  # testes automatizados (unittest)
 ├── main.py                 # ponto de entrada do pipeline
 ├── requirements.txt
 └── README.md
