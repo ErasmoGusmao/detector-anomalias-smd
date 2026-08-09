@@ -446,7 +446,7 @@ recebem como valores default de seus parâmetros, e podem ser sobrescritos por c
 | 2 | Uso adequado de NumPy | ✅ Concluído |
 | 3 | Implementação em PyTorch (partes 1 e 2) | ✅ Concluído |
 | 4 | Testes automatizados (unittest) | ✅ Concluído |
-| 5 | Requisitos | ⬜ Pendente |
+| 4 | Requisitos | ⬜ Pendente |
 | 6 | Design/arquitetura + Git e colaboração | ⬜ Pendente |
 | Final | Apresentação | ⬜ Pendente |
 
@@ -467,16 +467,26 @@ recebem como valores default de seus parâmetros, e podem ser sobrescritos por c
 
 ## Testes automatizados
 
-Os testes unitários utilizam o módulo 'unittest' da biblioteca padrão e estão organizados em quatro arquivos na pasta 'tests/'.
+Os testes unitários utilizam o módulo `unittest` da biblioteca padrão e estão organizados em quatro arquivos na pasta `tests/`.
+
+### Como executar os testes
+
+A partir da raiz do projeto, com o ambiente virtual ativado:
+
+```bash
+python -m unittest discover -s tests        # suíte completa
+python -m unittest discover -s tests -v     # detalhando cada teste
+python -m unittest tests.test_model         # um único arquivo
+```
 
 ### Estrutura dos testes
 
 ```
 tests/
-├── test_data.py.         # carregamento e limpeza dos dados
-├── test_preprocessing.py # transformações de pré-processamento
-├── test_model.py.        # saída, salvamento e carregamento do modelo
-└── test_training.py.     # formato dos tensores (DataLoader)
+├── test_data.py           # carregamento e limpeza dos dados
+├── test_preprocessing.py  # transformações de pré-processamento
+├── test_model.py          # saída, salvamento e carregamento do modelo
+└── test_training.py       # formato dos tensores (DataLoader)
 ```
 
 ### Descrição dos testes
@@ -497,6 +507,43 @@ tests/
 | `test_model.py` | `TestModelSaving` | `test_save_model_creates_file` | `save_model` cria o arquivo `.pt` em disco e o arquivo não está vazio. |
 | `test_model.py` | `TestModelLoading` | `test_load_model_restores_weights` | `load_model` restaura pesos idênticos aos do modelo salvo originalmente. |
 
+### Evidência de execução
+
+Saída de `python -m unittest discover -s tests -v`:
+
+```
+test_clean_data_removes_nan (test_data.TestDataLoading.test_clean_data_removes_nan)
+Verifica que clean_data remove linhas com NaN sem alterar colunas. ... ok
+test_load_data_file_not_found (test_data.TestDataLoading.test_load_data_file_not_found)
+Verifica que load_data levanta FileNotFoundError para caminho inexistente. ... ok
+test_load_data_returns_dataframe (test_data.TestDataLoading.test_load_data_returns_dataframe)
+Verifica que load_data retorna um DataFrame não vazio com 38 colunas. ... ok
+test_load_model_restores_weights (test_model.TestModelLoading.test_load_model_restores_weights)
+Verifica que load_model restaura os pesos idênticos ao modelo salvo. ... ok
+test_model_output_is_finite (test_model.TestModelOutput.test_model_output_is_finite)
+Verifica que a saída do modelo não contém NaN ou Inf. ... ok
+test_model_output_shape (test_model.TestModelOutput.test_model_output_shape)
+Verifica que a saída do modelo tem o mesmo shape da entrada (reconstrução). ... ok
+test_save_model_creates_file (test_model.TestModelSaving.test_save_model_creates_file)
+Verifica que save_model cria o arquivo .pt no caminho especificado. ... ok
+test_split_data_sizes (test_preprocessing.TestPreprocessing.test_split_data_sizes)
+Verifica que split_data divide os dados nas proporções corretas. ... ok
+test_standardize_mean (test_preprocessing.TestPreprocessing.test_standardize_mean)
+Verifica que a média das features padronizadas é aproximadamente zero. ... ok
+test_standardize_shape (test_preprocessing.TestPreprocessing.test_standardize_shape)
+Verifica que standardize preserva as dimensoes originais da matriz. ... ok
+test_standardize_std (test_preprocessing.TestPreprocessing.test_standardize_std)
+Verifica que o desvio padrão das features de X_std é aprox. um. ... ok
+test_dataloader_tensor_dtype (test_training.TestTrainingTensors.test_dataloader_tensor_dtype)
+Verifica que os tensores do DataLoader são float32. ... ok
+test_dataloader_tensor_shape (test_training.TestTrainingTensors.test_dataloader_tensor_shape)
+Verifica as dimensões dos tensores (batch, window_size, n_features). ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.173s
+
+OK
+```
 
 ## Equipe
 
