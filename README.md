@@ -276,7 +276,7 @@ data/
 ├── artifacts/              # modelo treinado e resultados (gerados pela execução)
 ├── data/                   # base de dados - SMD
 ├── docs/
-│   └── requisitos/         # requisitos do sistema (uma visão por arquivo)
+│   └── requisitos/         # documento de requisitos (GR4ML) em PDF
 ├── notebooks/              # experimentos e exploração
 ├── src/
 │   ├── data/
@@ -304,7 +304,8 @@ em todas as funções. O pipeline está completamente implementado: carregamento
 (`loader.py`), pré-processamento NumPy (`transform.py`), modelo autoencoder (`model.py`),
 laço de treino (`train.py`), persistência do modelo (`persistence.py`) e avaliação com
 limiar e binarização (`metrics.py`) — todos os módulos funcionais.
-Os testes automatizados (unittest) entram na Entrega 4.
+Os testes automatizados (unittest) estão em `tests/` — ver a seção
+[Testes automatizados](#testes-automatizados).
 
 A pasta `artifacts/` é criada automaticamente pela execução do `main.py` e recebe o modelo
 treinado (`autoencoder.pt`), o histórico de treino/validação por época
@@ -449,7 +450,7 @@ recebem como valores default de seus parâmetros, e podem ser sobrescritos por c
 | 2 | Uso adequado de NumPy | ✅ Concluído |
 | 3 | Implementação em PyTorch (partes 1 e 2) | ✅ Concluído |
 | 4 | Testes automatizados (unittest) | ✅ Concluído |
-| 4 | Requisitos | ⬜ Pendente |
+| 4 | Requisitos (GR4ML) | ✅ Concluído |
 | 6 | Design/arquitetura + Git e colaboração | ⬜ Pendente |
 | Final | Apresentação | ⬜ Pendente |
 
@@ -547,6 +548,20 @@ Ran 13 tests in 0.173s
 
 OK
 ```
+
+## Requisitos
+
+Os requisitos do sistema foram elicitados com o **GR4ML** (*Goal-Oriented Requirements
+Engineering for Machine Learning*), em três visões — Business View, Analytics Design View e
+Data Preparation View — traduzidas depois em requisitos redigidos e rastreáveis.
+
+📄 **[`docs/requisitos/gr4ml-caderno-grupo12.pdf`](docs/requisitos/gr4ml-caderno-grupo12.pdf)**
+
+O documento traz **7 Requisitos Funcionais** (`RF-01` a `RF-07`), **4 Requisitos Não
+Funcionais** (`RNF-01` a `RNF-04`), **5 Requisitos de Dados** (`RD01` a `RD05`) e o critério
+de aceitação do conjunto, cada requisito citando o elemento do modelo que o originou. Os dois
+diagramas — Business View e pipeline de dados — estão no próprio PDF. Detalhes em
+[`docs/requisitos/`](docs/requisitos/).
 
 ## Equipe
 
