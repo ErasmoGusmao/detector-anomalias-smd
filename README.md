@@ -12,10 +12,9 @@ mudanças inesperadas nessas métricas podem indicar falhas, degradação de des
 sobrecarga, mau funcionamento de serviços ou outros eventos que exigem investigação.
 
 O problema abordado neste projeto é a **detecção de comportamentos anômalos em séries
-temporais multivariadas de servidores**. A proposta é construir um sistema de Inteligência
-Artificial capaz de carregar métricas operacionais, pré-processar os dados e, nas próximas
-entregas, treinar e avaliar um modelo para identificar pontos ou períodos com comportamento
-incomum.
+temporais multivariadas de servidores**. O sistema carrega métricas operacionais,
+pré-processa os dados, treina um autoencoder sobre o comportamento normal e avalia a
+detecção, identificando pontos ou períodos com comportamento incomum.
 
 Esse tipo de solução é relevante porque a identificação manual de anomalias em grandes
 volumes de métricas é custosa, sujeita a atrasos e dependente da experiência de quem
@@ -24,7 +23,8 @@ e observabilidade, apontando situações suspeitas que merecem análise.
 
 O projeto evoluiu de forma incremental: a estrutura do repositório foi definida, o pipeline
 de dados com NumPy (carregamento, limpeza e pré-processamento) está implementado e o
-modelo de detecção (autoencoder em PyTorch) está em integração.
+modelo de detecção (autoencoder em PyTorch) está treinando, avaliando e sendo persistido
+de ponta a ponta por `python main.py`.
 
 ## Base de dados: SMD (Server Machine Dataset)
 
@@ -47,10 +47,11 @@ A organização da base inclui:
 - `test_label`: rótulos que indicam se cada ponto do conjunto de teste é normal ou anômalo;
 - `interpretation_label`: indicação das dimensões associadas às anomalias.
 
-Para manter o escopo viável durante a disciplina, a primeira versão do projeto deve trabalhar
-com um recorte controlado da base, por exemplo uma única máquina, antes de expandir para
-as 28 máquinas. Essa decisão reduz a complexidade inicial sem descaracterizar o problema,
-pois cada máquina do SMD já representa uma série temporal multivariada completa.
+Para manter o escopo viável durante a disciplina, o projeto trabalha com um recorte
+controlado da base: uma única máquina, a **`machine-1-1`** (definida em
+`src/utils/config.py`, no parâmetro `FILE_NAME`). Essa decisão reduz a complexidade sem
+descaracterizar o problema, pois cada máquina do SMD já é uma série temporal multivariada
+completa. Expandir para as 28 máquinas é uma evolução natural do pipeline.
 
 O SMD é adequado ao escopo do projeto porque permite aplicar diretamente os requisitos da
 disciplina:
@@ -58,10 +59,10 @@ disciplina:
 - carregamento de dados a partir de arquivos;
 - limpeza e pré-processamento de séries temporais;
 - uso de NumPy para normalização, divisão e manipulação matricial;
-- uso futuro de PyTorch para treinamento de um modelo de detecção de anomalias;
+- uso de PyTorch para treinamento de um modelo de detecção de anomalias;
 - avaliação experimental com métricas como precisão, revocação e F1-score;
-- modularização do pipeline em carregamento, pré-processamento, modelo, treinamento,
-  avaliação e inferência.
+- modularização do pipeline em carregamento, pré-processamento, modelo, treinamento e
+  avaliação.
 
 Como limitação inicial, as métricas do SMD são anonimizadas. Isso significa que o projeto
 consegue estudar o comportamento numérico das séries e detectar anomalias, mas não deve
@@ -127,8 +128,8 @@ porque *aquilo não é o normal que ele conhece*.
 
 ### 3. Como a anomalia é detectada: erro de reconstrução + linha de corte
 
-A abordagem pretendida para as próximas entregas usa o **erro de reconstrução**: o modelo
-tenta reproduzir cada instante a partir do que aprendeu sobre o comportamento normal.
+A abordagem implementada usa o **erro de reconstrução**: o modelo tenta reproduzir cada
+instante a partir do que aprendeu sobre o comportamento normal.
 
 - Instante **normal** → o modelo reconstrói bem → **erro baixo**.
 - Instante **anômalo** → o modelo nunca viu algo parecido → reconstrói mal → **erro alto**.
@@ -230,11 +231,31 @@ o limiar é definido como o percentil 99,5 dos erros de reconstrução *do conju
 Como o modelo foi treinado nesses mesmos dados, esses erros são otimisticamente baixos —
 escolha padrão e conhecida do método de detecção não-supervisionada por reconstrução.
 
-## Como obter a base de dados
+## A base de dados já vem no repositório
 
-Os arquivos do SMD **não são versionados** neste repositório — datasets ficam fora do Git
-por boa prática (a pasta `data/` é ignorada pelo `.gitignore`, exceto o `.gitkeep`). Cada
-integrante precisa baixar a base e colocá-la em `data/` localmente. Há duas formas:
+O recorte usado pelo projeto — a máquina **`machine-1-1`** — **já está versionado** aqui.
+Basta clonar e rodar `python main.py`: não é preciso baixar nada para reproduzir os
+resultados.
+
+```
+data/
+└── ServerMachineDataset/
+    ├── train/machine-1-1.txt                 # série de treino (só comportamento normal)
+    ├── test/machine-1-1.txt                  # série de teste (normal + anômalo)
+    ├── test_label/machine-1-1.txt            # rótulos 0/1 do conjunto de teste
+    └── interpretation_label/machine-1-1.txt  # dimensões associadas a cada anomalia
+```
+
+A exceção é deliberada e está declarada no `.gitignore`: versionar **apenas** a
+`machine-1-1` garante que todo o grupo — e quem for avaliar o projeto — trabalhe sobre
+exatamente os mesmos dados, sem depender de download externo. As outras 27 máquinas, os
+modelos treinados (`artifacts/`) e formatos intermediários (`.csv`, `.parquet`, `.pt`)
+continuam fora do controle de versão, mantendo o repositório leve.
+
+### Baixar as demais máquinas (opcional)
+
+Necessário apenas para expandir o escopo além da `machine-1-1` — os arquivos baixados são
+ignorados pelo Git automaticamente.
 
 **Opção A — Kaggle**
 
@@ -253,31 +274,19 @@ git clone https://github.com/NetManAIOps/OmniAnomaly.git
 # copie a pasta ServerMachineDataset/ para data/
 ```
 
-Organização típica dos arquivos após o download — um `.txt` por máquina, nomeado no
-formato `machine-<grupo>-<indice>`:
-
-```
-data/
-└── ServerMachineDataset/
-    ├── train/                 # séries de treino
-    ├── test/                  # séries de teste
-    ├── test_label/            # rótulos normal/anômalo do conjunto de teste
-    └── interpretation_label/  # dimensões associadas às anomalias
-```
-
-> Confira a estrutura após extrair (ela pode variar conforme a fonte) e ajuste o caminho
-> de leitura usado pelo pipeline. Os arquivos baixados ficam **fora do controle de versão**
-> (cobertos pelo `.gitignore`), mantendo o repositório leve e reprodutível.
+Os arquivos seguem o padrão `machine-<grupo>-<indice>.txt`, um por máquina, distribuídos
+nas mesmas quatro subpastas acima. Para apontar o pipeline para outra máquina, altere
+`FILE_NAME` em `src/utils/config.py`.
 
 ## Estrutura do projeto
 
 ```
 .
 ├── artifacts/              # modelo treinado e resultados (gerados pela execução)
-├── data/                   # base de dados - SMD
+├── data/                   # base SMD - a machine-1-1 vem versionada
 ├── docs/
 │   └── requisitos/         # documento de requisitos (GR4ML) em PDF
-├── notebooks/              # experimentos e exploração
+├── notebooks/              # exploração local (conteúdo fora do versionamento)
 ├── src/
 │   ├── data/
 │   │   └── loader.py       # carregamento e limpeza dos dados
@@ -309,8 +318,10 @@ Os testes automatizados (unittest) estão em `tests/` — ver a seção
 
 A pasta `artifacts/` é criada automaticamente pela execução do `main.py` e recebe o modelo
 treinado (`autoencoder.pt`), o histórico de treino/validação por época
-(`training_history.json`) e os resultados da avaliação (`results.json`). Assim como `data/`,
-ela é ignorada pelo `.gitignore` (`artifacts/`) — são artefatos gerados, não código-fonte.
+(`training_history.json`) e os resultados da avaliação (`results.json`). Ela é ignorada
+pelo `.gitignore` — são artefatos gerados, não código-fonte. Já `data/` tem tratamento
+diferente: é ignorada com uma exceção explícita para a `machine-1-1`, que **é** versionada
+(ver [A base de dados já vem no repositório](#a-base-de-dados-já-vem-no-repositório)).
 
 > ⚠️ **O modelo salvo não é necessariamente o da última época do log.** Com early
 > stopping, o treino continua rodando algumas épocas além da melhor antes de parar —
@@ -418,6 +429,8 @@ recebem como valores default de seus parâmetros, e podem ser sobrescritos por c
 
 | Parâmetro | Valor atual | Descrição |
 |-----------|-------------|-----------|
+| `FILE_NAME` | `"machine-1-1.txt"` | Máquina do SMD usada pelo pipeline. Trocar aqui para apontar para outra máquina. |
+| `VALIDATION_SIZE` | `0.2` | Fração final da série de treino reservada para validação (split temporal). |
 | `WINDOW_SIZE` | `50` | Tamanho da janela temporal deslizante do autoencoder. |
 | `EPOCHS` | `100` | Número máximo de épocas de treino. |
 | `BATCH_SIZE` | `64` | Tamanho do lote nos `DataLoader`. |
@@ -448,10 +461,11 @@ recebem como valores default de seus parâmetros, e podem ser sobrescritos por c
 | 1 | Modularização e organização do código | ✅ Concluído |
 | 1 | Tipagem (type hints) | ✅ Concluído |
 | 2 | Uso adequado de NumPy | ✅ Concluído |
-| 3 | Implementação em PyTorch (partes 1 e 2) | ✅ Concluído |
+| 3 | PyTorch: carregar dados, treinar, imprimir erro de treino e teste, salvar o modelo | ✅ Concluído |
 | 4 | Testes automatizados (unittest) | ✅ Concluído |
 | 4 | Requisitos (GR4ML) | ✅ Concluído |
-| 6 | Design/arquitetura + Git e colaboração | ⬜ Pendente |
+| 6 | Git e colaboração | ✅ Concluído |
+| 6 | Design/arquitetura (diagrama e decisões) | ⬜ Pendente |
 | Final | Apresentação | ⬜ Pendente |
 
 > **Entregas 2 e 3 concluídas:** pipeline de dados NumPy funcional de ponta a ponta —
@@ -468,6 +482,17 @@ recebem como valores default de seus parâmetros, e podem ser sobrescritos por c
 > por época, erro de reconstrução no teste e as métricas finais (precision, recall, F1,
 > accuracy), e persiste em `artifacts/` o modelo treinado, o histórico de treino
 > (`training_history.json`) e os resultados da avaliação (`results.json`).
+
+> **Entrega 4 concluída:** suíte de **13 testes** em `unittest` cobrindo carregamento dos
+> dados, saída do pré-processamento, formato dos tensores, saída do modelo e
+> salvamento/carregamento — com a saída da execução registrada em
+> [Testes automatizados](#testes-automatizados) — e o documento de requisitos elaborado com
+> o GR4ML, em [Requisitos](#requisitos).
+
+> **Git e colaboração:** o desenvolvimento acontece em branches `feature/*`, integradas à
+> `main` por pull request — **20 PRs mergeados** e **122 commits**, com contribuições de
+> seis dos oito integrantes. O que resta da Entrega 6 é o diagrama de arquitetura e o
+> registro das decisões arquiteturais.
 
 ## Testes automatizados
 
@@ -567,13 +592,13 @@ diagramas — Business View e pipeline de dados — estão no próprio PDF. Deta
 
 **Grupo 12:**
 
-- Leonardo Magalhães
-- Breno Santos
-- Erasmo Gusmão
-- Gabriel Santana
-- João Mateus
-- João Pedro
-- Orlando
-- Pedro Guerra
+- Breno Alexandre de Albuquerque Santos
+- Erasmo de Melo Gusmão
+- Gabriel Victor Alves Santana
+- João Mateus Queiroz Moreira
+- João Pedro da Silva Rodrigues
+- Leonardo Canuto de Oliveira Magalhães
+- Orlando Gomes dos Reis Neto
+- Pedro Oliveira Pessoa Guerra
 
 > Tema proposto por Leonardo Magalhães e Breno Santos.
