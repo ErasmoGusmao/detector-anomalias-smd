@@ -285,6 +285,7 @@ nas mesmas quatro subpastas acima. Para apontar o pipeline para outra máquina, 
 ├── artifacts/              # modelo treinado e resultados (gerados pela execução)
 ├── data/                   # base SMD - a machine-1-1 vem versionada
 ├── docs/
+│   ├── arquitetura.md      # componentes, fluxo de dados e decisoes de projeto
 │   └── requisitos/         # documento de requisitos (GR4ML) em PDF
 ├── notebooks/              # exploração local (conteúdo fora do versionamento)
 ├── src/
@@ -465,7 +466,7 @@ recebem como valores default de seus parâmetros, e podem ser sobrescritos por c
 | 4 | Testes automatizados (unittest) | ✅ Concluído |
 | 4 | Requisitos (GR4ML) | ✅ Concluído |
 | 6 | Git e colaboração | ✅ Concluído |
-| 6 | Design/arquitetura (diagrama e decisões) | ⬜ Pendente |
+| 6 | Design/arquitetura (diagrama e decisões) | ✅ Concluído |
 | Final | Apresentação | ⬜ Pendente |
 
 > **Entregas 2 e 3 concluídas:** pipeline de dados NumPy funcional de ponta a ponta —
@@ -491,8 +492,8 @@ recebem como valores default de seus parâmetros, e podem ser sobrescritos por c
 
 > **Git e colaboração:** o desenvolvimento acontece em branches `feature/*`, integradas à
 > `main` por pull request — **20 PRs mergeados** e **122 commits**, com contribuições de
-> seis dos oito integrantes. O que resta da Entrega 6 é o diagrama de arquitetura e o
-> registro das decisões arquiteturais.
+> seis dos oito integrantes. O diagrama de arquitetura e as decisões de projeto estão em
+> [Arquitetura](#arquitetura).
 
 ## Testes automatizados
 
@@ -573,6 +574,17 @@ Ran 13 tests in 0.173s
 
 OK
 ```
+
+## Arquitetura
+
+O sistema é um pipeline modular: um pacote por etapa — carregamento, pré-processamento,
+modelo, treino e avaliação —, com `main.py` como único ponto de execução e orquestração.
+
+📄 **[`docs/arquitetura.md`](docs/arquitetura.md)**
+
+O documento traz o diagrama de componentes, o fluxo de dados de ponta a ponta, a
+responsabilidade de cada módulo, as **dez decisões arquiteturais** com a justificativa de
+cada uma, a rastreabilidade de requisito para componente e as limitações conhecidas.
 
 ## Requisitos
 
