@@ -49,3 +49,6 @@ artifacts/
 .idea/
 .DS_Store
 Thumbs.db
+
+# --- Arquivos temporarios do Microsoft Office ---
+~$*
